@@ -1,0 +1,22 @@
+{
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "marunthon-app",
+                    "appId": "1:295154910952:android:7f5a838c93ad6875d0eb5d",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "marunthon-app",
+                    "configurations": {
+                        "android": "1:295154910952:android:7f5a838c93ad6875d0eb5d",
+                        "ios": "1:295154910952:ios:d73af99111d729f4d0eb5d"
+                    }
+                }
+            }
+        }
+    }
+}
