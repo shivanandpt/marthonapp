@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:marunthon_app/features/menu_drawer/presentation/menu_drawer.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -27,8 +28,8 @@ class _HomePageState extends State<HomePage> {
       var userData = await _firestore.collection('users').doc(user.uid).get();
       setState(() {
         userName = userData["name"] ?? "Runner";
-        nextRun = userData["next_run"] ?? "Rest Day";
-        weeklyProgress = userData["weekly_progress"] ?? 0;
+        nextRun = "Rest Day";
+        weeklyProgress = 0;
       });
     }
   }
@@ -36,17 +37,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Marunthon App"),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.settings),
-            onPressed: () {
-              Navigator.pushNamed(context, "/settings");
-            },
-          ),
-        ],
-      ),
+      appBar: AppBar(title: Text("Marathon Trainer")),
+      drawer: MenuDrawer(),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
