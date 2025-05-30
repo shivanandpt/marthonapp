@@ -47,3 +47,10 @@ app.*.map.json
 linux/
 macos/
 windows/
+firebase_options.json
+# Xcode related
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/Debug.xcconfig
+ios/Flutter/Profile.xcconfig  

@@ -2,90 +2,267 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:marunthon_app/features/menu_drawer/presentation/menu_drawer.dart';
+import 'package:marunthon_app/core/services/analytics_service.dart';
+import 'package:marunthon_app/core/theme/app_colors.dart';
+import 'package:marunthon_app/models/run_model.dart';
+import 'package:intl/intl.dart';
+import 'package:marunthon_app/core/services/run_service.dart';
+import 'package:marunthon_app/core/services/user_service.dart';
+import 'package:marunthon_app/features/log_run/run_tracking_pag.dart';
+import 'package:marunthon_app/features/log_run/run_list.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final RunService _runService = RunService();
 
   String userName = "User";
-  String nextRun = "5K Easy Run";
-  int weeklyProgress = 3;
+  double totalDistance = 0.0;
+  int totalRuns = 0;
+  List<RunModel> _runs = [];
+  bool _isLoading = true;
+  int runsThisWeek = 0;
+
+  double lastWeekDistance = 0.0;
+  int lastWeekRuns = 0;
 
   @override
   void initState() {
     super.initState();
+    AnalyticsService.setCurrentScreen('HomePage');
     _loadUserData();
+    _fetchRuns();
   }
 
   void _loadUserData() async {
     User? user = _auth.currentUser;
     if (user != null) {
-      var userData = await _firestore.collection('users').doc(user.uid).get();
+      var userData = await UserService().getUserData(user.uid);
       setState(() {
         userName = userData["name"] ?? "Runner";
-        nextRun = "Rest Day";
-        weeklyProgress = 0;
       });
     }
   }
 
+  Future<void> _fetchRuns() async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return;
+
+    // Use RunService to fetch runs
+    final runs = await _runService.fetchAllRuns(userId: userId);
+
+    // Calculate last week's summary
+    double weekDistance = 0.0;
+    int weekCount = 0;
+    final now = DateTime.now();
+    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+    for (var run in runs) {
+      if (run.timestamp.isAfter(startOfWeek)) {
+        weekDistance += run.distance;
+        weekCount++;
+      }
+    }
+
+    setState(() {
+      _runs = runs;
+      lastWeekDistance = weekDistance;
+      lastWeekRuns = weekCount;
+      _isLoading = false;
+    });
+  }
+
+  // Group runs by day (date string)
+  Map<String, List<RunModel>> _groupRunsByDay() {
+    Map<String, List<RunModel>> grouped = {};
+    for (var run in _runs) {
+      final day = DateFormat('yyyy-MM-dd').format(run.timestamp);
+      grouped.putIfAbsent(day, () => []).add(run);
+    }
+    return grouped;
+  }
+
+  Future<void> _deleteRun(String runId) async {
+    await _runService.deleteRun(runId);
+    setState(() {
+      _runs.removeWhere((run) => run.id == runId);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final grouped = _groupRunsByDay();
+    final dayKeys = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
+
     return Scaffold(
-      appBar: AppBar(title: Text("Marathon Trainer")),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: Text("Home", style: TextStyle(color: AppColors.textPrimary)),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
+      ),
       drawer: MenuDrawer(),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Welcome, $userName",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Card(
-              elevation: 3,
+      body:
+          _isLoading
+              ? Center(child: CircularProgressIndicator())
+              : CustomScrollView(
+                slivers: [
+                  // --- Combined Welcome & Weekly Summary Card ---
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 16, 12, 0),
+                      child: Card(
+                        color: AppColors.cardBg,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 2,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 24.0,
+                            horizontal: 20,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.emoji_events,
+                                    color: AppColors.accent,
+                                    size: 40,
+                                  ),
+                                  SizedBox(width: 16),
+                                  Expanded(
+                                    child: Text(
+                                      "Welcome back, $userName!",
+                                      style: TextStyle(
+                                        color: AppColors.textPrimary,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 22,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 18),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  Column(
+                                    children: [
+                                      Text(
+                                        "Distance",
+                                        style: TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontWeight: FontWeight.w400,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        "${lastWeekDistance.toStringAsFixed(2)} m",
+                                        style: TextStyle(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 28,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    children: [
+                                      Text(
+                                        "Runs",
+                                        style: TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontWeight: FontWeight.w400,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        "$lastWeekRuns",
+                                        style: TextStyle(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 28,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 18),
+                              Center(
+                                child: Text(
+                                  "Runs this week: $lastWeekRuns / 5",
+                                  style: TextStyle(
+                                    color: AppColors.secondary,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ),
+                              if (lastWeekRuns >= 5)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8.0),
+                                  child: Center(
+                                    child: Text(
+                                      "🎉 Congrats! You smashed your weekly goal!",
+                                      style: TextStyle(
+                                        color: AppColors.accent,
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // --- Run List grouped by day with separator and swipe-to-delete ---
+                  RunList(
+                    runs: _runs,
+                    onDelete: (runId) async => await _deleteRun(runId),
+                  ),
+                ],
+              ),
+      // --- Full-width Log Run Button Section ---
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+        child: SizedBox(
+          width: double.infinity,
+          height: 56,
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.textPrimary,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(32),
               ),
-              child: ListTile(
-                title: Text("Next Run"),
-                subtitle: Text(nextRun, style: TextStyle(fontSize: 18)),
-                trailing: Icon(Icons.directions_run, color: Colors.blue),
-              ),
+              elevation: 4,
+              textStyle: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
             ),
-            SizedBox(height: 10),
-            Card(
-              elevation: 3,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: ListTile(
-                title: Text("Weekly Progress"),
-                subtitle: Text("$weeklyProgress / 5 runs completed"),
-                trailing: CircularProgressIndicator(
-                  value: weeklyProgress / 5,
-                  backgroundColor: Colors.grey.shade300,
-                ),
-              ),
-            ),
-            Spacer(),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, "/logRun");
-              },
-              child: Text("Log Today's Run"),
-              style: ElevatedButton.styleFrom(
-                minimumSize: Size(double.infinity, 50),
-              ),
-            ),
-          ],
+            icon: Icon(Icons.add),
+            label: Text("Log Today's Run"),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => RunTrackingPage()),
+              );
+            },
+          ),
         ),
       ),
     );

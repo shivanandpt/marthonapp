@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:marunthon_app/features/settings/settings_provider.dart';
 
 class SettingsPage extends StatelessWidget {
+  const SettingsPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     final settingsProvider = Provider.of<SettingsProvider>(context);
@@ -41,10 +43,10 @@ class SettingsPage extends StatelessWidget {
                 await settingsProvider.signOut();
                 Navigator.pushReplacementNamed(context, '/login');
               },
-              child: Text("Logout"),
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
+              child: Text("Logout"),
             ),
           ],
         ),
