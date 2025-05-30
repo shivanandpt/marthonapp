@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../data/firebase_service.dart';
-import 'package:marunthon_app/data/services/firestore_service.dart';
+import 'package:marunthon_app/core/services/user_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../data/user_prefrences.dart';
+import 'package:marunthon_app/core/services/analytics_service.dart';
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
   final FirebaseService _firebaseService = FirebaseService();
-  final FirestoreService _firestoreService = FirestoreService();
+  final UserService _userService = UserService();
 
   @override
   void initState() {
     super.initState();
+    AnalyticsService.setCurrentScreen('LoginPage');
     _checkUser(); // Check if user is already logged in
   }
 
@@ -33,14 +36,14 @@ class _LoginPageState extends State<LoginPage> {
     if (user != null) {
       try {
         // Check if user already exists in Firestore
-        Map<String, dynamic>? userDoc = await _firestoreService.getUserData(
+        Map<String, dynamic>? userDoc = await _userService.getUserData(
           user.uid,
         );
 
         // Save user data locally and to Firestore if needed
         if (userDoc.isEmpty) {
           // New user, save to Firestore
-          await _firestoreService.saveUserData(user);
+          await _userService.saveUserData(user);
         }
 
         // Save user data to local preferences
@@ -49,7 +52,8 @@ class _LoginPageState extends State<LoginPage> {
           user.displayName ?? "Runner",
           user.email ?? "",
         );
-
+        AnalyticsService.logEvent('login', {'method': '_handleSignIn'});
+        AnalyticsService.setCurrentScreen('HomePage');
         // Navigate to the home screen
         Navigator.pushReplacementNamed(context, '/');
       } catch (e) {

@@ -63,6 +63,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '295154910952',
     projectId: 'marunthon-app',
     storageBucket: 'marunthon-app.firebasestorage.app',
+    androidClientId: '295154910952-3eom64s9rcht67m36v9q7m0p0am1b4pe.apps.googleusercontent.com',
     iosClientId: '295154910952-8nv9hb73fj2b1uiognpdcfrrrbumrj38.apps.googleusercontent.com',
     iosBundleId: 'com.example.marunthonApp',
   );
