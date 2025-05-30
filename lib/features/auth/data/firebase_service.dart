@@ -7,6 +7,7 @@ class FirebaseService implements AuthRepository {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   // Sign in with Google
+  @override
   Future<User?> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
@@ -30,12 +31,14 @@ class FirebaseService implements AuthRepository {
   }
 
   // Sign out
+  @override
   Future<void> signOut() async {
     await _auth.signOut();
     await _googleSignIn.signOut();
   }
 
   // Get current user
+  @override
   User? getCurrentUser() {
     return _auth.currentUser;
   }
