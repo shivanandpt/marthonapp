@@ -10,6 +10,7 @@ import 'package:marunthon_app/core/services/user_profile_service.dart';
 import 'package:marunthon_app/features/log_run/run_tracking_pag.dart';
 import 'package:marunthon_app/features/log_run/run_list.dart';
 import 'package:marunthon_app/features/user_profile/user_profile_screen.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -44,6 +45,7 @@ class _HomePageState extends State<HomePage> {
     User? user = _auth.currentUser;
     if (user != null) {
       var userData = await UserProfileService().fetchUserProfile(user.uid);
+      if (!mounted) return;
       setState(() {
         userName = userData?.name ?? "Runner";
       });
@@ -54,7 +56,6 @@ class _HomePageState extends State<HomePage> {
     final userId = _auth.currentUser?.uid;
     if (userId == null) return;
 
-    // Use RunService to fetch runs
     final runs = await _runService.fetchAllRuns(userId: userId);
 
     // Calculate last week's summary
@@ -69,6 +70,7 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
+    if (!mounted) return;
     setState(() {
       _runs = runs;
       lastWeekDistance = weekDistance;
@@ -134,24 +136,24 @@ class _HomePageState extends State<HomePage> {
                               Row(
                                 children: [
                                   Icon(
-                                    Icons.emoji_events,
+                                    LucideIcons.trophy,
                                     color: AppColors.accent,
                                     size: 40,
                                   ),
                                   SizedBox(width: 16),
                                   Expanded(
                                     child: Text(
-                                      "Welcome back, $userName!",
+                                      "Welcome, $userName!",
                                       style: TextStyle(
                                         color: AppColors.textPrimary,
-                                        fontWeight: FontWeight.w700,
+                                        fontWeight: FontWeight.w600,
                                         fontSize: 22,
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 18),
+                              SizedBox(height: 8),
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceAround,
@@ -168,11 +170,11 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                       SizedBox(height: 4),
                                       Text(
-                                        "${lastWeekDistance.toStringAsFixed(2)} m",
+                                        "${(lastWeekDistance / 1000).toStringAsFixed(2)} km", // Show in km
                                         style: TextStyle(
                                           color: AppColors.primary,
                                           fontWeight: FontWeight.w800,
-                                          fontSize: 28,
+                                          fontSize: 24,
                                         ),
                                       ),
                                     ],
@@ -193,35 +195,47 @@ class _HomePageState extends State<HomePage> {
                                         style: TextStyle(
                                           color: AppColors.primary,
                                           fontWeight: FontWeight.w800,
-                                          fontSize: 28,
+                                          fontSize: 24,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 18),
-                              Center(
-                                child: Text(
-                                  "Runs this week: $lastWeekRuns / 5",
-                                  style: TextStyle(
-                                    color: AppColors.secondary,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                              ),
+                              SizedBox(height: 8),
+                              // Center(
+                              //   child: Text(
+                              //     "Runs this week: $lastWeekRuns / 5",
+                              //     style: TextStyle(
+                              //       color: AppColors.secondary,
+                              //       fontWeight: FontWeight.w700,
+                              //       fontSize: 18,
+                              //     ),
+                              //   ),
+                              // ),
                               if (lastWeekRuns >= 5)
                                 Padding(
-                                  padding: const EdgeInsets.only(top: 8.0),
+                                  padding: const EdgeInsets.only(top: 6.0),
                                   child: Center(
-                                    child: Text(
-                                      "🎉 Congrats! You smashed your weekly goal!",
-                                      style: TextStyle(
-                                        color: AppColors.accent,
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 18,
-                                      ),
+                                    child: Column(
+                                      children: [
+                                        Text(
+                                          "Congrats! 🎉 ",
+                                          style: TextStyle(
+                                            color: AppColors.accent,
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 18,
+                                          ),
+                                        ),
+                                        Text(
+                                          "You smashed your goal!",
+                                          style: TextStyle(
+                                            color: AppColors.accent,
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 18,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
@@ -254,7 +268,7 @@ class _HomePageState extends State<HomePage> {
               elevation: 4,
               textStyle: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
             ),
-            icon: Icon(Icons.add),
+            icon: Icon(LucideIcons.plus),
             label: Text("Log Today's Run"),
             onPressed: () {
               Navigator.push(

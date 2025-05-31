@@ -8,6 +8,7 @@ import 'package:marunthon_app/features/auth/presentation/login_page.dart';
 import 'package:marunthon_app/core/services/analytics_service.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
 import 'package:marunthon_app/features/user_profile/user_profile_screen.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class MenuDrawer extends StatefulWidget {
   const MenuDrawer({super.key});
@@ -19,12 +20,12 @@ class MenuDrawer extends StatefulWidget {
 class _MenuDrawerState extends State<MenuDrawer> {
   String userName = "Runner";
   final List<Map<String, dynamic>> menuItems = [
-    {'icon': Icons.home, 'title': 'Home', 'action': 'Home'},
-    {'icon': Icons.person, 'title': 'Profile', 'action': 'Profile'},
-    {'icon': Icons.run_circle, 'title': 'My Runs', 'action': 'My Runs'},
-    {'icon': Icons.settings, 'title': 'Settings', 'action': 'Settings'},
-    {'icon': Icons.info, 'title': 'About', 'action': 'About'},
-    {'icon': Icons.logout, 'title': 'Logout', 'action': 'Logout'},
+    {'icon': LucideIcons.home, 'title': 'Home', 'action': 'Home'},
+    {'icon': LucideIcons.user, 'title': 'Profile', 'action': 'Profile'},
+    {'icon': LucideIcons.footprints, 'title': 'My Runs', 'action': 'My Runs'},
+    {'icon': LucideIcons.settings, 'title': 'Settings', 'action': 'Settings'},
+    {'icon': LucideIcons.info, 'title': 'About', 'action': 'About'},
+    {'icon': LucideIcons.logOut, 'title': 'Logout', 'action': 'Logout'},
   ];
   @override
   void initState() {

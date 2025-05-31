@@ -26,6 +26,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Marathon Training',
       theme: ThemeData(
+        fontFamily: 'Poppins',
         scaffoldBackgroundColor: AppColors.background,
         primaryColor: AppColors.primary,
         colorScheme: ColorScheme.dark(
