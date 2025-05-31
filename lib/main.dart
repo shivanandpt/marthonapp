@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:marunthon_app/core/routes/app_routes.dart';
+import 'package:marunthon_app/features/auth/presentation/login_page.dart';
+import 'package:marunthon_app/features/home/home_page.dart';
 import 'package:marunthon_app/features/auth/presentation/auth_wrapper.dart';
 import 'firebase_options.dart';
-import 'core/theme/app_colors.dart';
+import 'package:marunthon_app/core/theme/app_colors.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,8 +21,6 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -30,7 +31,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.dark(
           primary: AppColors.primary,
           secondary: AppColors.secondary,
-          background: AppColors.background,
+          surface: AppColors.background,
           error: AppColors.error,
         ),
         cardColor: AppColors.cardBg,
