@@ -1,14 +1,10 @@
 import 'dart:math';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:marunthon_app/features/home/home_page.dart';
 import 'package:marunthon_app/features/settings/settings_page.dart';
-
 import 'package:marunthon_app/features/auth/presentation/login_page.dart';
-import 'package:marunthon_app/features/auth/data/user_prefrences.dart';
-
 import 'package:marunthon_app/core/services/analytics_service.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
 import 'package:marunthon_app/features/user_profile/user_profile_screen.dart';
@@ -102,11 +98,10 @@ class _MenuDrawerState extends State<MenuDrawer> {
   }
 
   void _loadUserName() async {
-    String? userId = await UserPreferences.getUserId();
-    if (userId != null) {
-      String? savedName = await UserPreferences.getUserName();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
       setState(() {
-        userName = savedName ?? "Runner";
+        userName = user.displayName ?? "Runner";
       });
     } else {
       Navigator.pushReplacement(
@@ -161,7 +156,6 @@ class _MenuDrawerState extends State<MenuDrawer> {
         // Handle logout
         AnalyticsService.logEvent('logout', {'method': 'menu_drawer'});
         FirebaseAuth.instance.signOut();
-        UserPreferences.clearUser(); // Clear user data from preferences
         AnalyticsService.setCurrentScreen('LoginPage');
         Navigator.pushReplacement(
           context,
