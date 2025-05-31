@@ -11,6 +11,7 @@ import 'package:marunthon_app/features/auth/data/user_prefrences.dart';
 
 import 'package:marunthon_app/core/services/analytics_service.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
+import 'package:marunthon_app/features/user_profile/user_profile_screen.dart';
 
 class MenuDrawer extends StatefulWidget {
   const MenuDrawer({super.key});
@@ -23,6 +24,7 @@ class _MenuDrawerState extends State<MenuDrawer> {
   String userName = "Runner";
   final List<Map<String, dynamic>> menuItems = [
     {'icon': Icons.home, 'title': 'Home', 'action': 'Home'},
+    {'icon': Icons.person, 'title': 'Profile', 'action': 'Profile'},
     {'icon': Icons.run_circle, 'title': 'My Runs', 'action': 'My Runs'},
     {'icon': Icons.settings, 'title': 'Settings', 'action': 'Settings'},
     {'icon': Icons.info, 'title': 'About', 'action': 'About'},
@@ -126,6 +128,13 @@ class _MenuDrawerState extends State<MenuDrawer> {
           MaterialPageRoute(builder: (context) => HomePage()),
         );
         break;
+      case 'Profile':
+        // Navigate to Profile
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => UserProfileScreen()),
+        );
+        break;
       case 'My Runs':
         // Navigate to My Runs
         // Navigator.push(
@@ -173,52 +182,57 @@ class _MenuDrawerState extends State<MenuDrawer> {
         children: [
           DrawerHeader(
             decoration: BoxDecoration(color: AppColors.primary),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Marathon Trainer',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Marathon Trainer',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-                SizedBox(height: 20),
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 40,
-                      backgroundImage: AssetImage(
-                        'lib/assets/images/avatar.png',
+                  SizedBox(height: 20),
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 40,
+                        backgroundImage: AssetImage(
+                          'lib/assets/images/avatar.png',
+                        ),
                       ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Welcome,',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
-                          Text(
-                            userName,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Welcome,',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
                             ),
-                            overflow:
-                                TextOverflow
-                                    .ellipsis, // Handle long names gracefully
-                          ),
-                        ],
+                            Text(
+                              userName,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow:
+                                  TextOverflow
+                                      .ellipsis, // Handle long names gracefully
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
           ...menuItems.map((item) {

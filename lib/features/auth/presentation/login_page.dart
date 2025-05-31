@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../data/firebase_service.dart';
-import 'package:marunthon_app/core/services/user_service.dart';
+import 'package:marunthon_app/core/services/user_profile_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../data/user_prefrences.dart';
 import 'package:marunthon_app/core/services/analytics_service.dart';
+import 'package:marunthon_app/models/user_profile.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,7 +15,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final FirebaseService _firebaseService = FirebaseService();
-  final UserService _userService = UserService();
+  final UserProfileService _userService = UserProfileService();
 
   @override
   void initState() {
@@ -36,14 +37,19 @@ class _LoginPageState extends State<LoginPage> {
     if (user != null) {
       try {
         // Check if user already exists in Firestore
-        Map<String, dynamic>? userDoc = await _userService.getUserData(
-          user.uid,
-        );
+        var userDoc = await _userService.fetchUserProfile(user.uid);
 
         // Save user data locally and to Firestore if needed
-        if (userDoc.isEmpty) {
+        if (userDoc == null) {
           // New user, save to Firestore
-          await _userService.saveUserData(user);
+          await _userService.storeUserProfile(
+            user.uid,
+            UserProfile(
+              name: user.displayName ?? "Runner",
+              email: user.email ?? "",
+              profilePicPath: user.photoURL ?? "",
+            ),
+          );
         }
 
         // Save user data to local preferences
