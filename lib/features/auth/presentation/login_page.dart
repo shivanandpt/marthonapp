@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../data/firebase_service.dart';
 import 'package:marunthon_app/core/services/user_profile_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../data/user_prefrences.dart';
 import 'package:marunthon_app/core/services/analytics_service.dart';
 import 'package:marunthon_app/models/user_profile.dart';
 
@@ -25,8 +24,8 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _checkUser() async {
-    String? userId = await UserPreferences.getUserId();
-    if (userId != null) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
       // If user data exists locally, navigate to the home screen
       Navigator.pushReplacementNamed(context, '/');
     }
@@ -51,13 +50,6 @@ class _LoginPageState extends State<LoginPage> {
             ),
           );
         }
-
-        // Save user data to local preferences
-        await UserPreferences.saveUser(
-          user.uid,
-          user.displayName ?? "Runner",
-          user.email ?? "",
-        );
         AnalyticsService.logEvent('login', {'method': '_handleSignIn'});
         AnalyticsService.setCurrentScreen('HomePage');
         // Navigate to the home screen
@@ -71,10 +63,41 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white, // Set background to white
       body: Center(
-        child: ElevatedButton(
-          onPressed: _handleSignIn,
-          child: Text("Sign in with Google"),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Logo above the button
+            SizedBox(
+              width: 240, // Doubled from 120 to 240
+              height: 240, // Doubled from 120 to 240
+              child: Image.asset(
+                'assets/app_icon/run_mate.png', // Update path if needed
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: 220, // Make button a bit smaller
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: _handleSignIn,
+                child: const Text("Sign in with Google"),
+              ),
+            ),
+          ],
         ),
       ),
     );
