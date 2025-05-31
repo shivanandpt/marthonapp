@@ -3,7 +3,6 @@ import 'package:intl/intl.dart';
 import 'package:marunthon_app/features/log_run/run_detail_page.dart';
 import 'package:marunthon_app/models/run_model.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
-import 'package:marunthon_app/core/services/run_service.dart';
 
 class RunList extends StatefulWidget {
   final List<RunModel> runs;

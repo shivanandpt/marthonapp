@@ -72,7 +72,7 @@ class _RunDetailPageState extends State<RunDetailPage> {
                     (p['speed'] as num).toDouble().clamp(0.0, double.infinity),
               )
               .fold<double>(0.0, (a, b) => a + b) /
-          (pointsInMinute.where((p) => p['speed'] != null).length == 0
+          (pointsInMinute.where((p) => p['speed'] != null).isEmpty
               ? 1
               : pointsInMinute.where((p) => p['speed'] != null).length);
       final avgElevation =
@@ -80,7 +80,7 @@ class _RunDetailPageState extends State<RunDetailPage> {
               .where((p) => p['elevation'] != null)
               .map((p) => (p['elevation'] as num).toDouble())
               .fold<double>(0.0, (a, b) => a + b) /
-          (pointsInMinute.where((p) => p['elevation'] != null).length == 0
+          (pointsInMinute.where((p) => p['elevation'] != null).isEmpty
               ? 1
               : pointsInMinute.where((p) => p['elevation'] != null).length);
 
@@ -197,7 +197,9 @@ class _RunDetailPageState extends State<RunDetailPage> {
                     _StatBox(
                       label: "Duration",
                       value:
-                          "${Duration(seconds: widget.run.duration).toString().split('.').first}",
+                          Duration(
+                            seconds: widget.run.duration,
+                          ).toString().split('.').first,
                     ),
                   ],
                 ),
