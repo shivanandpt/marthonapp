@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:marunthon_app/core/services/user_profile_service.dart';
 import 'package:marunthon_app/models/user_profile.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({Key? key}) : super(key: key);
@@ -138,7 +139,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                               : null,
                       child:
                           _profilePicPath == null
-                              ? const Icon(Icons.person, size: 48)
+                              ? const Icon(LucideIcons.user, size: 48)
                               : null,
                     ),
                   ),
