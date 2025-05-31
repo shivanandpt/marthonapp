@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:marunthon_app/features/menu_drawer/presentation/menu_drawer.dart';
 import 'package:marunthon_app/core/services/analytics_service.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
 import 'package:marunthon_app/models/run_model.dart';
 import 'package:intl/intl.dart';
 import 'package:marunthon_app/core/services/run_service.dart';
-import 'package:marunthon_app/core/services/user_service.dart';
+import 'package:marunthon_app/core/services/user_profile_service.dart';
 import 'package:marunthon_app/features/log_run/run_tracking_pag.dart';
 import 'package:marunthon_app/features/log_run/run_list.dart';
+import 'package:marunthon_app/features/user_profile/user_profile_screen.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -43,9 +43,9 @@ class _HomePageState extends State<HomePage> {
   void _loadUserData() async {
     User? user = _auth.currentUser;
     if (user != null) {
-      var userData = await UserService().getUserData(user.uid);
+      var userData = await UserProfileService().fetchUserProfile(user.uid);
       setState(() {
-        userName = userData["name"] ?? "Runner";
+        userName = userData?.name ?? "Runner";
       });
     }
   }
