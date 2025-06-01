@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class UserModel {
   final String id;
   final String name;
@@ -31,7 +33,7 @@ class UserModel {
     this.weight = 0,
     this.height = 0,
     this.injuryNotes = '',
-    this.goal = '',
+    this.goal = '5K',
     this.goalEventDate,
     this.runDaysPerWeek = 3,
     this.age = 0,
@@ -59,7 +61,7 @@ class UserModel {
       weight: data['weight'] ?? 0,
       height: data['height'] ?? 0,
       injuryNotes: data['injuryNotes'] ?? '',
-      goal: data['goal'] ?? '',
+      goal: data['goal'] ?? '5K',
       goalEventDate:
           data['goalEventDate'] != null
               ? (data['goalEventDate'] as Timestamp).toDate()
