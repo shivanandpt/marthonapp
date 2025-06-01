@@ -1,0 +1,82 @@
+name: 🚀 Feature Request
+description: Suggest a new feature for the Run App
+title: "[Feature] "
+labels: [feature, enhancement]
+assignees: ["shiva"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve the Run App! Please fill out this feature request clearly.
+
+  - type: input
+    id: feature_name
+    attributes:
+      label: 🌟 Feature Name
+      description: A clear, concise name for the new feature.
+      placeholder: e.g., Voice Coaching in Interval Runs
+    validations:
+      required: true
+
+  - type: textarea
+    id: feature_description
+    attributes:
+      label: 📝 Feature Description
+      description: What should be implemented and why?
+      placeholder: |
+        - Explain the goal of the feature
+        - Add user stories if applicable
+        - Describe the value to users
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected_modules
+    attributes:
+      label: 📲 Affected Modules / Screens
+      description: List any screens, flows, or components this feature will impact.
+      placeholder: e.g., Training Plan screen, VoiceCoach engine
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: acceptance_criteria
+    attributes:
+      label: ✅ Acceptance Criteria
+      description: When is this feature considered complete?
+      options:
+        - label: Functionality implemented
+        - label: Responsive UI
+        - label: Voice/Vibration feedback (if applicable)
+        - label: No crashes or bugs
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 🗓️ Priority
+      description: How important is this feature?
+      options:
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true
+
+  - type: textarea
+    id: related_issues
+    attributes:
+      label: 📎 Related Issues / PRs
+      description: Link any related issues, epics, or pull requests
+      placeholder: e.g., Closes #123, Related to #456
+    validations:
+      required: false
+
+  - type: input
+    id: assignee
+    attributes:
+      label: 👤 Suggested Assignee
+      description: GitHub username of the developer (if known)
+      placeholder: e.g., @devname
+    validations:
+      required: false
