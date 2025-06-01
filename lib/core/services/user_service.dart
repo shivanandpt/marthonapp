@@ -24,14 +24,22 @@ class UserService {
   // Get user profile by ID
   Future<UserModel?> getUserProfile(String userId) async {
     try {
-      final docSnapshot = await _usersCollection.doc(userId).get();
-      if (docSnapshot.exists) {
-        return UserModel.fromFirestore(docSnapshot.data()!, docSnapshot.id);
+      final doc = await _firestore.collection('users').doc(userId).get();
+
+      if (!doc.exists) {
+        print('User profile does not exist for: $userId');
+        return null; // Profile doesn't exist - needs setup
       }
-      return null;
+
+      if (doc.data() == null) {
+        print('User profile data is null for: $userId');
+        return null; // Profile exists but data is corrupted
+      }
+
+      return UserModel.fromFirestore(doc.data()!, doc.id);
     } catch (e) {
       print('Error getting user profile: $e');
-      rethrow;
+      throw e; // Throw error for network/permission issues
     }
   }
 
