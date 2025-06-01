@@ -140,7 +140,7 @@ class RunService {
       final runs = await getRunsInDateRange(userId, startDate, endDate);
 
       int totalRuns = runs.length;
-      int totalDistance = 0;
+      double totalDistance = 0.0;
       int totalDuration = 0;
 
       for (var run in runs) {

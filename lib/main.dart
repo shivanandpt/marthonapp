@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:marunthon_app/core/routes/app_routes.dart';
-import 'package:marunthon_app/features/auth/presentation/login_page.dart';
-import 'package:marunthon_app/features/home/home_page.dart';
-import 'package:marunthon_app/features/auth/presentation/auth_wrapper.dart';
 import 'firebase_options.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
 
@@ -23,7 +19,7 @@ void main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Marathon Training',
       theme: ThemeData(
         fontFamily: 'Poppins',
@@ -57,8 +53,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       darkTheme: ThemeData.dark(),
-      home: AuthWrapper(), // Check authentication status
-      onGenerateRoute: AppRouter.generateRoute,
+      routerConfig: AppRoutes().router,
     );
   }
 }
