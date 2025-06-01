@@ -1,15 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
+import 'package:marunthon_app/core/widgets/app_button.dart';
 import 'package:marunthon_app/features/menu_drawer/presentation/menu_drawer.dart';
 import 'package:marunthon_app/core/services/analytics_service.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
 import 'package:marunthon_app/models/run_model.dart';
+import 'package:marunthon_app/models/user_model.dart';
+import 'package:marunthon_app/models/training_plan_model.dart';
+import 'package:marunthon_app/models/training_day_model.dart';
 import 'package:intl/intl.dart';
 import 'package:marunthon_app/core/services/run_service.dart';
-import 'package:marunthon_app/core/services/user_profile_service.dart';
+import 'package:marunthon_app/core/services/user_service.dart';
+import 'package:marunthon_app/core/services/training_plan_service.dart';
+import 'package:marunthon_app/core/services/training_day_service.dart';
 import 'package:marunthon_app/features/log_run/run_tracking_pag.dart';
-import 'package:marunthon_app/features/log_run/run_list.dart';
-import 'package:marunthon_app/features/user_profile/user_profile_screen.dart';
+
+// Import components
+import 'package:marunthon_app/features/home/components/welcome_card.dart';
+import 'package:marunthon_app/features/home/components/training_plan_card.dart';
+import 'package:marunthon_app/features/home/components/today_training_card.dart';
+import 'package:marunthon_app/features/home/components/no_plan_card.dart';
+import 'package:marunthon_app/features/home/components/recent_runs_section.dart';
+import 'package:marunthon_app/features/home/components/upcoming_training_section.dart';
+import 'package:marunthon_app/features/home/utils/date_utils.dart'
+    as AppDateUtils;
 import 'package:lucide_icons/lucide_icons.dart';
 
 class HomePage extends StatefulWidget {
@@ -22,89 +37,182 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final RunService _runService = RunService();
+  final UserService _userService = UserService();
+  final TrainingPlanService _trainingPlanService = TrainingPlanService();
+  final TrainingDayService _trainingDayService = TrainingDayService();
 
-  String userName = "User";
-  double totalDistance = 0.0;
-  int totalRuns = 0;
-  List<RunModel> _runs = [];
+  UserModel? _userModel;
+  TrainingPlanModel? _activePlan;
+  List<TrainingDayModel> _upcomingTrainingDays = [];
+  List<RunModel> _recentRuns = [];
   bool _isLoading = true;
-  int runsThisWeek = 0;
 
-  double lastWeekDistance = 0.0;
-  int lastWeekRuns = 0;
+  // Training progress stats
+  int _daysCompleted = 0;
+  int _totalDays = 0;
+  int _currentWeek = 0;
+  int _totalWeeks = 0;
+  TrainingDayModel? _todaysTraining;
 
   @override
   void initState() {
     super.initState();
     AnalyticsService.setCurrentScreen('HomePage');
     _loadUserData();
-    _fetchRuns();
   }
 
-  void _loadUserData() async {
-    User? user = _auth.currentUser;
-    if (user != null) {
-      var userData = await UserProfileService().fetchUserProfile(user.uid);
+  Future<void> _loadUserData() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Get current Firebase user
+      User? user = _auth.currentUser;
+      if (user == null) {
+        context.go('/login');
+        return;
+      }
+
+      // Load user model
+      final userModel = await _userService.getUserProfile(user.uid);
+      if (userModel == null) {
+        context.go('/profile-setup');
+        return;
+      }
+
+      // Load active training plan
+      final activePlan = await _trainingPlanService.getActiveTrainingPlan(
+        user.uid,
+      );
+
+      // Load recent runs - limit to 5
+      final recentRuns = await _runService.getUserRuns(user.uid);
+      recentRuns.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      final limitedRuns = recentRuns.take(5).toList();
+
+      // If there's an active plan, get upcoming training days and stats
+      List<TrainingDayModel> upcomingDays = [];
+      TrainingDayModel? todayTraining;
+      int daysCompleted = 0;
+      int totalDays = 0;
+      int currentWeek = 1;
+      int totalWeeks = 0;
+
+      if (activePlan != null) {
+        // Get all training days for plan
+        final allTrainingDays = await _trainingDayService
+            .getTrainingDaysForPlan(activePlan.id);
+        totalDays = allTrainingDays.length;
+        totalWeeks = activePlan.weeks;
+
+        // Find today's date
+        final today = DateTime(
+          DateTime.now().year,
+          DateTime.now().month,
+          DateTime.now().day,
+        );
+        final tomorrow = today.add(Duration(days: 1));
+        final endOfWeek = today.add(Duration(days: 7));
+
+        // Filter for today's training
+        todayTraining = allTrainingDays.firstWhere(
+          (day) =>
+              day.dateScheduled != null &&
+              AppDateUtils.DateUtils.isSameDay(day.dateScheduled!, today),
+          orElse:
+              () => TrainingDayModel(
+                id: '',
+                planId: activePlan.id,
+                week: 1,
+                dayOfWeek: today.weekday,
+                optional: false,
+                runPhases: [],
+              ),
+        );
+
+        // Get upcoming days (next 7 days including today)
+        upcomingDays =
+            allTrainingDays
+                .where(
+                  (day) =>
+                      day.dateScheduled != null &&
+                      day.dateScheduled!.isAfter(
+                        today.subtract(Duration(days: 1)),
+                      ) &&
+                      day.dateScheduled!.isBefore(endOfWeek),
+                )
+                .toList();
+
+        upcomingDays.sort(
+          (a, b) => a.dateScheduled!.compareTo(b.dateScheduled!),
+        );
+
+        // Calculate days completed
+        for (var run in recentRuns) {
+          if (run.trainingDayId != null) {
+            daysCompleted++;
+          }
+        }
+
+        // Find current week
+        if (todayTraining.id.isNotEmpty) {
+          currentWeek = todayTraining.week;
+        } else {
+          // Calculate week based on start date
+          final firstDay = allTrainingDays.firstWhere(
+            (day) => day.dateScheduled != null,
+            orElse:
+                () => TrainingDayModel(
+                  id: '',
+                  planId: activePlan.id,
+                  week: 1,
+                  dayOfWeek: 1,
+                  optional: false,
+                  runPhases: [],
+                ),
+          );
+
+          if (firstDay.dateScheduled != null) {
+            final diff = today.difference(firstDay.dateScheduled!).inDays;
+            currentWeek = (diff ~/ 7) + 1;
+            if (currentWeek > totalWeeks) currentWeek = totalWeeks;
+            if (currentWeek < 1) currentWeek = 1;
+          }
+        }
+      }
+
       if (!mounted) return;
       setState(() {
-        userName = userData?.name ?? "Runner";
+        _userModel = userModel;
+        _activePlan = activePlan;
+        _recentRuns = limitedRuns;
+        _upcomingTrainingDays = upcomingDays;
+        _daysCompleted = daysCompleted;
+        _totalDays = totalDays;
+        _currentWeek = currentWeek;
+        _totalWeeks = totalWeeks;
+        _todaysTraining = todayTraining;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading home data: $e');
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
       });
     }
   }
 
-  Future<void> _fetchRuns() async {
-    final userId = _auth.currentUser?.uid;
-    if (userId == null) return;
-
-    final runs = await _runService.fetchAllRuns(userId: userId);
-
-    // Calculate last week's summary
-    double weekDistance = 0.0;
-    int weekCount = 0;
-    final now = DateTime.now();
-    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-    for (var run in runs) {
-      if (run.timestamp.isAfter(startOfWeek)) {
-        weekDistance += run.distance;
-        weekCount++;
-      }
-    }
-
-    if (!mounted) return;
-    setState(() {
-      _runs = runs;
-      lastWeekDistance = weekDistance;
-      lastWeekRuns = weekCount;
-      _isLoading = false;
-    });
-  }
-
-  // Group runs by day (date string)
-  Map<String, List<RunModel>> _groupRunsByDay() {
-    Map<String, List<RunModel>> grouped = {};
-    for (var run in _runs) {
-      final day = DateFormat('yyyy-MM-dd').format(run.timestamp);
-      grouped.putIfAbsent(day, () => []).add(run);
-    }
-    return grouped;
-  }
-
-  Future<void> _deleteRun(String runId) async {
-    await _runService.deleteRun(runId);
-    setState(() {
-      _runs.removeWhere((run) => run.id == runId);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    final grouped = _groupRunsByDay();
-    final dayKeys = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text("Home", style: TextStyle(color: AppColors.textPrimary)),
+        title: Text(
+          "Dashboard",
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
         backgroundColor: AppColors.background,
         elevation: 0,
         iconTheme: IconThemeData(color: AppColors.textPrimary),
@@ -113,171 +221,119 @@ class _HomePageState extends State<HomePage> {
       body:
           _isLoading
               ? Center(child: CircularProgressIndicator())
-              : CustomScrollView(
-                slivers: [
-                  // --- Combined Welcome & Weekly Summary Card ---
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 16, 12, 0),
-                      child: Card(
-                        color: AppColors.cardBg,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 2,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 24.0,
-                            horizontal: 20,
+              : _userModel == null
+              // Handle case when user model is null
+              ? _buildNoUserView()
+              : RefreshIndicator(
+                onRefresh: _loadUserData,
+                child: SingleChildScrollView(
+                  physics: AlwaysScrollableScrollPhysics(),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Welcome Card - Now safe to use _userModel!
+                        WelcomeCard(userModel: _userModel!),
+                        SizedBox(height: 24),
+
+                        // Training Plan Progress Card
+                        if (_activePlan != null)
+                          TrainingPlanCard(
+                            activePlan: _activePlan!,
+                            daysCompleted: _daysCompleted,
+                            totalDays: _totalDays,
+                            currentWeek: _currentWeek,
+                            totalWeeks: _totalWeeks,
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    LucideIcons.trophy,
-                                    color: AppColors.accent,
-                                    size: 40,
-                                  ),
-                                  SizedBox(width: 16),
-                                  Expanded(
-                                    child: Text(
-                                      "Welcome, $userName!",
-                                      style: TextStyle(
-                                        color: AppColors.textPrimary,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 22,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 8),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
-                                children: [
-                                  Column(
-                                    children: [
-                                      Text(
-                                        "Distance",
-                                        style: TextStyle(
-                                          color: AppColors.textSecondary,
-                                          fontWeight: FontWeight.w400,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        "${(lastWeekDistance / 1000).toStringAsFixed(2)} km", // Show in km
-                                        style: TextStyle(
-                                          color: AppColors.primary,
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 24,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Column(
-                                    children: [
-                                      Text(
-                                        "Runs",
-                                        style: TextStyle(
-                                          color: AppColors.textSecondary,
-                                          fontWeight: FontWeight.w400,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        "$lastWeekRuns",
-                                        style: TextStyle(
-                                          color: AppColors.primary,
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 24,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 8),
-                              // Center(
-                              //   child: Text(
-                              //     "Runs this week: $lastWeekRuns / 5",
-                              //     style: TextStyle(
-                              //       color: AppColors.secondary,
-                              //       fontWeight: FontWeight.w700,
-                              //       fontSize: 18,
-                              //     ),
-                              //   ),
-                              // ),
-                              if (lastWeekRuns >= 5)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 6.0),
-                                  child: Center(
-                                    child: Column(
-                                      children: [
-                                        Text(
-                                          "Congrats! 🎉 ",
-                                          style: TextStyle(
-                                            color: AppColors.accent,
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: 18,
-                                          ),
-                                        ),
-                                        Text(
-                                          "You smashed your goal!",
-                                          style: TextStyle(
-                                            color: AppColors.accent,
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: 18,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                            ],
+
+                        // Today's Training
+                        if (_todaysTraining != null && _activePlan != null)
+                          TodayTrainingCard(todaysTraining: _todaysTraining!),
+
+                        // No Plan Card
+                        if (_activePlan == null) NoPlanCard(),
+
+                        SizedBox(height: 24),
+
+                        // Recent Runs Section
+                        RecentRunsSection(recentRuns: _recentRuns),
+
+                        // Upcoming Training Days Section
+                        if (_upcomingTrainingDays.isNotEmpty)
+                          UpcomingTrainingSection(
+                            upcomingDays: _upcomingTrainingDays,
+                            todaysTraining: _todaysTraining,
                           ),
-                        ),
-                      ),
+
+                        SizedBox(height: 80), // For bottom padding
+                      ],
                     ),
                   ),
-                  // --- Run List grouped by day with separator and swipe-to-delete ---
-                  RunList(
-                    runs: _runs,
-                    onDelete: (runId) async => await _deleteRun(runId),
-                  ),
-                ],
+                ),
               ),
-      // --- Full-width Log Run Button Section ---
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-        child: SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.textPrimary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(32),
-              ),
-              elevation: 4,
-              textStyle: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
-            ),
-            icon: Icon(LucideIcons.plus),
-            label: Text("Log Today's Run"),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => RunTrackingPage()),
-              );
-            },
+      // --- Run Action Button ---
+      floatingActionButton:
+          _userModel != null &&
+                  (_todaysTraining != null && _todaysTraining!.id.isNotEmpty)
+              ? FloatingActionButton.extended(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => RunTrackingPage(
+                            //trainingDayId:_todaysTraining!.id, // UNCOMMENT THIS LINE
+                          ),
+                    ),
+                  );
+                },
+                backgroundColor: AppColors.primary,
+                icon: Icon(LucideIcons.play),
+                label: Text("Start Today's Run"),
+              )
+              : _userModel != null
+              ? FloatingActionButton.extended(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => RunTrackingPage()),
+                  );
+                },
+                backgroundColor: AppColors.primary,
+                icon: Icon(LucideIcons.play),
+                label: Text("Quick Run"),
+              )
+              : null, // Don't show the FAB if userModel is null
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+    );
+  }
+
+  // Add this method to handle the case when user model is null
+  Widget _buildNoUserView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.account_circle, size: 80, color: AppColors.secondary),
+          SizedBox(height: 16),
+          Text(
+            "Profile information not available",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-        ),
+          SizedBox(height: 8),
+          Text(
+            "Please set up your profile to continue",
+            style: TextStyle(color: Colors.grey[600]),
+          ),
+          SizedBox(height: 24),
+          AppButton(
+            onPressed: () {
+              context.go('/profile-setup');
+            },
+            text: "Set Up Profile",
+          ),
+        ],
       ),
     );
   }
