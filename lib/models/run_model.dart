@@ -6,15 +6,15 @@ class RunModel {
   final String? trainingDayId;
   final DateTime timestamp; // startTime
   final int duration; // in seconds
-  final int distance; // in meters
-  final int elevationGain; // in meters
+  final double distance; // in meters
+  final double elevationGain; // in meters
   final double avgSpeed; // in m/s
   final int steps;
   final bool voiceEnabled;
   final bool vibrationOnly;
   final bool shared;
   final List<Map<String, dynamic>>? routePoints;
-
+  double get totalDistance => distance.toDouble();
   RunModel({
     required this.id,
     required this.userId,
@@ -67,8 +67,9 @@ class RunModel {
               ? (data['startTime'] as Timestamp).toDate()
               : DateTime.now(),
       duration: data['duration'] ?? 0,
-      distance: data['totalDistance'] ?? 0,
+      distance: data['distance'].toDouble() ?? 0.0,
       elevationGain: data['elevationGain'] ?? 0,
+
       avgSpeed: data['avgSpeed']?.toDouble() ?? 0.0,
       steps: data['steps'] ?? 0,
       voiceEnabled: data['voiceEnabled'] ?? true,
@@ -105,8 +106,8 @@ class RunModel {
     String? trainingDayId,
     DateTime? timestamp,
     int? duration,
-    int? distance,
-    int? elevationGain,
+    double? distance,
+    double? elevationGain,
     double? avgSpeed,
     int? steps,
     bool? voiceEnabled,

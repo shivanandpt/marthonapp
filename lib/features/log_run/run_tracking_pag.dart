@@ -129,32 +129,32 @@ class _RunTrackingPageState extends State<RunTrackingPage> {
     if (user != null) {
       try {
         RunService runService = RunService();
-        await runService.saveRun(
-          userId: user.uid,
-          distance: totalDistance,
-          routePoints:
-              _routePoints
-                  .map(
-                    (point) => {
-                      'latitude': point['latitude'],
-                      'longitude': point['longitude'],
-                      'elevation': point['elevation'],
-                      'speed': point['speed'],
-                      'timestamp': point['timestamp'],
-                    },
-                  )
-                  .toList(),
-          speed: _routePoints.isNotEmpty ? _routePoints.last['speed'] : 0.0,
-          elevation:
-              _routePoints.isNotEmpty ? _routePoints.last['elevation'] : 0.0,
-          duration:
-              _routePoints.isNotEmpty
-                  ? ((_routePoints.last['timestamp'] -
-                              _routePoints.first['timestamp']) /
-                          1000)
-                      .toInt() // Ensure duration is an int
-                  : 0, // Duration in seconds
-        );
+        // await runService.saveRun(
+        //   userId: user.uid,
+        //   distance: totalDistance,
+        //   routePoints:
+        //       _routePoints
+        //           .map(
+        //             (point) => {
+        //               'latitude': point['latitude'],
+        //               'longitude': point['longitude'],
+        //               'elevation': point['elevation'],
+        //               'speed': point['speed'],
+        //               'timestamp': point['timestamp'],
+        //             },
+        //           )
+        //           .toList(),
+        //   speed: _routePoints.isNotEmpty ? _routePoints.last['speed'] : 0.0,
+        //   elevation:
+        //       _routePoints.isNotEmpty ? _routePoints.last['elevation'] : 0.0,
+        //   duration:
+        //       _routePoints.isNotEmpty
+        //           ? ((_routePoints.last['timestamp'] -
+        //                       _routePoints.first['timestamp']) /
+        //                   1000)
+        //               .toInt() // Ensure duration is an int
+        //           : 0, // Duration in seconds
+        // );
         print("Run saved successfully!");
       } catch (e) {
         print("Error saving run________________----------------------------");

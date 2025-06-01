@@ -1,73 +1,41 @@
 import 'package:flutter/material.dart';
-import 'package:marunthon_app/features/settings/settings_page.dart';
+import 'package:go_router/go_router.dart';
+import 'package:marunthon_app/features/auth/presentation/login_page.dart';
+import 'package:marunthon_app/features/home/home_page.dart';
+import 'package:marunthon_app/features/user_profile/setup/screens/user_profile_setup_screen.dart';
+import 'package:marunthon_app/features/user_profile/setup/screens/user_setup_complete_screen.dart';
 
-class AppRouter {
-  static Route<dynamic> generateRoute(RouteSettings settings) {
-    switch (settings.name) {
-      case '/':
-        return MaterialPageRoute(builder: (_) => MainScreen());
-      // case '/trainingPlan':
-      //   return MaterialPageRoute(builder: (_) => TrainingPlanPage());
-      // case '/logRun':
-      //   return MaterialPageRoute(builder: (_) => LogRunPage());
-      case '/settings':
-        return MaterialPageRoute(builder: (_) => SettingsPage());
-      default:
-        return MaterialPageRoute(
-          builder:
-              (_) => Scaffold(
-                body: Center(child: Text('Page not found')), // 404 page
-              ),
-        );
-    }
-  }
-}
-
-class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
-
-  @override
-  _MainScreenState createState() => _MainScreenState();
-}
-
-class _MainScreenState extends State<MainScreen> {
-  int _selectedIndex = 0;
-  final List<Widget> _screens = [
-    // HomePage(),
-    // TrainingPlanPage(),
-    // LogRunPage(),
-    SettingsPage(),
-  ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: _screens[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.directions_run),
-            label: 'Plan',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle_outline),
-            label: 'Log Run',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
+class AppRoutes {
+  final GoRouter router = GoRouter(
+    routes: [
+      GoRoute(path: '/', builder: (context, state) => const HomePage()),
+      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
+      GoRoute(
+        path: '/profile-setup',
+        builder:
+            (context, state) => const UserProfileSetupScreen(isEditMode: false),
       ),
-    );
-  }
+      GoRoute(
+        path: '/profile-edit',
+        builder:
+            (context, state) => const UserProfileSetupScreen(isEditMode: true),
+      ),
+      GoRoute(
+        path: '/setup-complete',
+        builder: (context, state) {
+          final userName = state.uri.queryParameters['name'] ?? 'User';
+          return UserSetupCompleteScreen(
+            userName: userName,
+            onContinue: () => context.go('/'),
+          );
+        },
+      ),
+    ],
+    redirect: (context, state) {
+      return null;
+    },
+    errorBuilder:
+        (context, state) =>
+            Scaffold(body: Center(child: Text('Error: ${state.error}'))),
+  );
 }

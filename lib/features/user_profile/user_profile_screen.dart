@@ -2,9 +2,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:marunthon_app/core/services/user_profile_service.dart';
-import 'package:marunthon_app/models/user_profile.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:marunthon_app/core/services/user_service.dart'; // New UserService
+import 'package:marunthon_app/core/services/user_profile_service.dart'; // Legacy service
+import 'package:marunthon_app/models/user_model.dart'; // New model
+import 'package:marunthon_app/models/user_profile.dart'; // Legacy model
+import 'package:marunthon_app/core/theme/app_colors.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({Key? key}) : super(key: key);
@@ -14,37 +18,10 @@ class UserProfileScreen extends StatefulWidget {
 }
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _weightController = TextEditingController();
-  final TextEditingController _heightController = TextEditingController();
-  final TextEditingController _dobController = TextEditingController();
-  String _weightUnit = 'kg';
-  String _heightUnit = 'cm';
-  String? _gender;
-  String? _raceDistance;
-  String? _trainingGoal;
-  String? _experienceLevel;
-  String? _profilePicPath;
-  DateTime? _dob;
+  final UserService _userService = UserService();
+  UserModel? _userModel;
   bool _loading = true;
-
-  final List<String> _genders = ['Male', 'Female', 'Other'];
-  final List<String> _raceDistances = [
-    '5K',
-    '10K',
-    'Half Marathon',
-    'Marathon',
-  ];
-  final List<String> _trainingGoals = ['Finish', 'Time Goal', 'Personal Best'];
-  final List<String> _experienceLevels = [
-    'Beginner',
-    'Intermediate',
-    'Advanced',
-  ];
-  final List<String> _weightUnits = ['kg', 'lb'];
-  final List<String> _heightUnits = ['cm', 'in'];
+  bool _isLegacyUser = false;
 
   @override
   void initState() {
@@ -60,35 +37,31 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       });
       return;
     }
+
     try {
-      final profile = await UserProfileService().fetchUserProfile(user.uid);
-      print("profile: $profile");
-      setState(() {
-        if (profile != null) {
-          _nameController.text = profile.name;
-          _emailController.text = profile.email;
-          _weightController.text =
-              profile.weight > 0 ? profile.weight.toString() : '';
-          _heightController.text =
-              profile.height > 0 ? profile.height.toString() : '';
-          _weightUnit = profile.weightUnit;
-          _heightUnit = profile.heightUnit;
-          _dob = profile.dob;
-          _dobController.text =
-              (profile.dob != DateTime(2000))
-                  ? DateFormat('yyyy-MM-dd').format(profile.dob)
-                  : '';
-          _gender = profile.gender;
-          _raceDistance = profile.raceDistance;
-          _trainingGoal = profile.trainingGoal;
-          _experienceLevel = profile.experienceLevel;
-          _profilePicPath = user.photoURL;
-        } else {
-          _nameController.text = user.displayName ?? '';
-          _emailController.text = user.email ?? '';
+      // Try to load user from new UserService first
+      final userModel = await _userService.getUserProfile(user.uid);
+
+      if (userModel != null) {
+        setState(() {
+          _userModel = userModel;
+          _loading = false;
+        });
+      } else {
+        // Fall back to legacy user profile system
+        final legacyProfile = await UserProfileService().fetchUserProfile(
+          user.uid,
+        );
+        setState(() {
+          _isLegacyUser = true;
+          _loading = false;
+        });
+
+        // Optionally migrate legacy user to new system
+        if (legacyProfile != null) {
+          _migrateToNewUserModel(user.uid, legacyProfile, user);
         }
-        _loading = false;
-      });
+      }
     } catch (e) {
       print("Error loading user profile: $e");
       setState(() {
@@ -97,249 +70,268 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     }
   }
 
-  Future<void> _pickDate() async {
-    DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime(2000),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        _dob = picked;
-        _dobController.text = DateFormat('yyyy-MM-dd').format(picked);
-      });
-    }
-  }
+  Future<void> _migrateToNewUserModel(
+    String userId,
+    UserProfile legacyProfile,
+    User firebaseUser,
+  ) async {
+    try {
+      // Create a new user model from legacy data
+      final userModel = UserModel(
+        id: userId,
+        name: legacyProfile.name,
+        email: legacyProfile.email,
+        profilePic: legacyProfile.profilePicPath ?? firebaseUser.photoURL ?? '',
+        metricSystem: legacyProfile.weightUnit == 'kg' ? 'metric' : 'imperial',
+        weight: legacyProfile.weight.toInt(),
+        height: legacyProfile.height.toInt(),
+        dob: legacyProfile.dob,
+        gender: legacyProfile.gender.toLowerCase(),
+        goal: legacyProfile.trainingGoal,
+        runDaysPerWeek: 3, // Default value
+        language: 'en', // Default value
+        timezone: 'UTC', // Default value
+        joinedAt: DateTime.now(),
+        lastActiveAt: DateTime.now(),
+        appVersion: '',
+      );
 
-  Future<void> _pickProfilePicture() async {
-    // TODO: Implement image picker logic
+      // Save the migrated user
+      await _userService.createUserProfile(userModel);
+
+      // Reload the profile
+      final updatedUserModel = await _userService.getUserProfile(userId);
+      if (updatedUserModel != null) {
+        setState(() {
+          _userModel = updatedUserModel;
+          _isLegacyUser = false;
+        });
+      }
+    } catch (e) {
+      print("Error migrating user profile: $e");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('User Profile')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              if (_loading) const Center(child: CircularProgressIndicator()),
-              if (!_loading) ...[
-                Center(
-                  child: GestureDetector(
-                    onTap: _pickProfilePicture,
-                    child: CircleAvatar(
-                      radius: 48,
-                      backgroundImage:
-                          _profilePicPath != null
-                              ? AssetImage(_profilePicPath!)
-                              : null,
-                      child:
-                          _profilePicPath == null
-                              ? const Icon(LucideIcons.user, size: 48)
-                              : null,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Name'),
-                  validator:
-                      (v) => v == null || v.isEmpty ? 'Enter your name' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                  keyboardType: TextInputType.emailAddress,
-                  validator:
-                      (v) => v == null || v.isEmpty ? 'Enter your email' : null,
-                ),
-                const SizedBox(height: 16),
-                // Weight Field with Toggle
-                TextFormField(
-                  controller: _weightController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: 'Weight',
-                    suffixText: _weightUnit,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ToggleButtons(
-                  isSelected:
-                      _weightUnits.map((u) => u == _weightUnit).toList(),
-                  onPressed: (index) {
-                    setState(() {
-                      _weightUnit = _weightUnits[index];
-                    });
-                  },
-                  children:
-                      _weightUnits
-                          .map(
-                            (u) => Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              child: Text(u),
-                            ),
-                          )
-                          .toList(),
-                ),
-                const SizedBox(height: 24),
-                // Height Field with Toggle
-                TextFormField(
-                  controller: _heightController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: 'Height',
-                    suffixText: _heightUnit,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ToggleButtons(
-                  isSelected:
-                      _heightUnits.map((u) => u == _heightUnit).toList(),
-                  onPressed: (index) {
-                    setState(() {
-                      _heightUnit = _heightUnits[index];
-                    });
-                  },
-                  children:
-                      _heightUnits
-                          .map(
-                            (u) => Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              child: Text(u),
-                            ),
-                          )
-                          .toList(),
-                ),
-                const SizedBox(height: 24),
-                TextFormField(
-                  controller: _dobController,
-                  readOnly: true,
-                  decoration: const InputDecoration(labelText: 'Date of Birth'),
-                  onTap: _pickDate,
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value:
-                      (_gender != null && _genders.contains(_gender))
-                          ? _gender
+      appBar: AppBar(
+        title: const Text('Profile'),
+        actions: [
+          if (_userModel != null)
+            IconButton(
+              icon: Icon(LucideIcons.edit),
+              onPressed: () {
+                context.push('/profile-edit');
+              },
+            ),
+        ],
+      ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_userModel == null) {
+      return _buildNoProfileView();
+    }
+
+    return _buildProfileView();
+  }
+
+  Widget _buildNoProfileView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(LucideIcons.userX, size: 64, color: AppColors.secondary),
+          const SizedBox(height: 16),
+          Text(
+            'Profile not found',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'We couldn\'t find your profile information',
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+          ),
+          const SizedBox(height: 32),
+          ElevatedButton(
+            onPressed: () {
+              context.push('/profile-setup');
+            },
+            child: const Text('Create Profile'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileView() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with profile pic and name
+          Center(
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: 60,
+                  backgroundImage:
+                      _userModel!.profilePic.isNotEmpty
+                          ? NetworkImage(_userModel!.profilePic)
                           : null,
-                  items:
-                      _genders
-                          .map(
-                            (g) => DropdownMenuItem(value: g, child: Text(g)),
+                  child:
+                      _userModel!.profilePic.isEmpty
+                          ? Icon(
+                            LucideIcons.user,
+                            size: 60,
+                            color: Colors.white,
                           )
-                          .toList(),
-                  onChanged: (g) => setState(() => _gender = g),
-                  decoration: const InputDecoration(labelText: 'Gender'),
+                          : null,
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value:
-                      (_raceDistance != null &&
-                              _raceDistances.contains(_raceDistance))
-                          ? _raceDistance
-                          : null,
-                  items:
-                      _raceDistances
-                          .map(
-                            (d) => DropdownMenuItem(value: d, child: Text(d)),
-                          )
-                          .toList(),
-                  onChanged: (d) => setState(() => _raceDistance = d),
-                  decoration: const InputDecoration(
-                    labelText: 'Target Race Distance',
-                  ),
+                Text(
+                  _userModel!.name,
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value:
-                      (_trainingGoal != null &&
-                              _trainingGoals.contains(_trainingGoal))
-                          ? _trainingGoal
-                          : null,
-                  items:
-                      _trainingGoals
-                          .map(
-                            (g) => DropdownMenuItem(value: g, child: Text(g)),
-                          )
-                          .toList(),
-                  onChanged: (g) => setState(() => _trainingGoal = g),
-                  decoration: const InputDecoration(labelText: 'Training Goal'),
+                Text(
+                  _userModel!.email,
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value:
-                      (_experienceLevel != null &&
-                              _experienceLevels.contains(_experienceLevel))
-                          ? _experienceLevel
-                          : null,
-                  items:
-                      _experienceLevels
-                          .map(
-                            (e) => DropdownMenuItem(value: e, child: Text(e)),
-                          )
-                          .toList(),
-                  onChanged: (e) => setState(() => _experienceLevel = e),
-                  decoration: const InputDecoration(
-                    labelText: 'Experience Level',
-                  ),
-                ),
+
                 const SizedBox(height: 32),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        Theme.of(
-                          context,
-                        ).colorScheme.primary, // Use primary color
-                    foregroundColor:
-                        Colors.white, // Optional: ensure text is visible
-                  ),
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      final user = FirebaseAuth.instance.currentUser;
-                      if (user == null) return;
-                      final profile = UserProfile(
-                        name: _nameController.text.trim(),
-                        email: _emailController.text.trim(),
-                        weight: double.tryParse(_weightController.text) ?? 0.0,
-                        weightUnit: _weightUnit,
-                        height: double.tryParse(_heightController.text) ?? 0.0,
-                        heightUnit: _heightUnit,
-                        dob: _dob,
-                        gender: _gender ?? '',
-                        raceDistance: _raceDistance ?? '',
-                        trainingGoal: _trainingGoal ?? '',
-                        experienceLevel: _experienceLevel ?? '',
-                        profilePicPath: _profilePicPath,
-                      );
-                      await UserProfileService().storeUserProfile(
-                        user.uid,
-                        profile,
-                      );
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Profile saved!')),
-                        );
-                      }
-                    }
+
+                // Edit Profile Button
+                ElevatedButton.icon(
+                  onPressed: () {
+                    context.push('/profile-edit');
                   },
-                  child: const Text('Save'),
+                  icon: Icon(LucideIcons.edit),
+                  label: Text('Edit Profile'),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
                 ),
               ],
-            ],
+            ),
+          ),
+
+          const SizedBox(height: 40),
+
+          // Profile info sections
+          _buildInfoSection('Basic Information', [
+            _buildInfoTile(LucideIcons.goal, 'Goal', _userModel!.goal),
+            _buildInfoTile(
+              LucideIcons.calendar,
+              'Date of Birth',
+              _userModel!.dob != null
+                  ? DateFormat('MMMM d, yyyy').format(_userModel!.dob!)
+                  : 'Not set',
+            ),
+            _buildInfoTile(
+              LucideIcons.languages,
+              'Language',
+              _userModel!.language == 'en' ? 'English' : 'Spanish',
+            ),
+          ]),
+
+          const SizedBox(height: 24),
+
+          _buildInfoSection('Training Preferences', [
+            _buildInfoTile(
+              LucideIcons.ruler,
+              'Measurement System',
+              _userModel!.metricSystem == 'metric'
+                  ? 'Metric (km)'
+                  : 'Imperial (miles)',
+            ),
+            _buildInfoTile(
+              LucideIcons.calendar,
+              'Running Days per Week',
+              '${_userModel!.runDaysPerWeek} days',
+            ),
+          ]),
+
+          const SizedBox(height: 24),
+
+          _buildInfoSection('Health Information', [
+            _buildInfoTile(
+              LucideIcons.scale,
+              'Weight',
+              _userModel!.weight > 0
+                  ? '${_userModel!.weight} ${_userModel!.metricSystem == 'metric' ? 'kg' : 'lbs'}'
+                  : 'Not set',
+            ),
+            _buildInfoTile(
+              LucideIcons.ruler,
+              'Height',
+              _userModel!.height > 0
+                  ? '${_userModel!.height} ${_userModel!.metricSystem == 'metric' ? 'cm' : 'in'}'
+                  : 'Not set',
+            ),
+            if (_userModel!.gender != null && _userModel!.gender!.isNotEmpty)
+              _buildInfoTile(LucideIcons.users, 'Gender', _userModel!.gender!),
+            if (_userModel!.injuryNotes != null &&
+                _userModel!.injuryNotes!.isNotEmpty)
+              _buildInfoTile(
+                LucideIcons.stethoscope,
+                'Health Notes',
+                _userModel!.injuryNotes!,
+              ),
+          ]),
+
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoSection(String title, List<Widget> children) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
           ),
         ),
+        const Divider(),
+        ...children,
+      ],
+    );
+  }
+
+  Widget _buildInfoTile(IconData icon, String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 24, color: AppColors.secondary),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+              ),
+              Text(
+                value,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
