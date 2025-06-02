@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:latlong2/latlong.dart';
 
 class RunModel {
   final String id;
@@ -14,6 +15,18 @@ class RunModel {
   final bool vibrationOnly;
   final bool shared;
   final List<Map<String, dynamic>>? routePoints;
+
+  // Additional properties
+  final double pace; // in min/km
+  final int calories;
+  final int avgHeartRate;
+  final int maxHeartRate;
+  final double temperature; // in Celsius
+  final double humidity; // in percentage
+  final double windSpeed; // in m/s
+  final String notes;
+  final String weather;
+
   double get totalDistance => distance.toDouble();
   RunModel({
     required this.id,
@@ -29,6 +42,15 @@ class RunModel {
     this.vibrationOnly = false,
     this.shared = false,
     this.routePoints,
+    this.pace = 0,
+    this.calories = 0,
+    this.avgHeartRate = 0,
+    this.maxHeartRate = 0,
+    this.temperature = 0,
+    this.humidity = 0,
+    this.windSpeed = 0,
+    this.notes = '',
+    this.weather = '',
   });
 
   // Calculate pace in minutes per km
@@ -61,24 +83,42 @@ class RunModel {
     return RunModel(
       id: id,
       userId: data['userId'] ?? '',
-      trainingDayId: data['trainingDayId'],
-      timestamp:
-          data['startTime'] != null
-              ? (data['startTime'] as Timestamp).toDate()
-              : DateTime.now(),
+      distance:
+          (data['distance'] as num?)?.toDouble() ?? 0.0, // Fix: Handle null
       duration: data['duration'] ?? 0,
-      distance: data['distance'].toDouble() ?? 0.0,
-      elevationGain: data['elevationGain'] ?? 0,
-
-      avgSpeed: data['avgSpeed']?.toDouble() ?? 0.0,
-      steps: data['steps'] ?? 0,
-      voiceEnabled: data['voiceEnabled'] ?? true,
-      vibrationOnly: data['vibrationOnly'] ?? false,
-      shared: data['shared'] ?? false,
+      avgSpeed:
+          (data['avgSpeed'] as num?)?.toDouble() ??
+          0.0, // Added required parameter
+      pace: (data['pace'] as num?)?.toDouble() ?? 0.0, // Fix: Handle null
+      calories: data['calories'] ?? 0,
+      avgHeartRate: data['avgHeartRate'] ?? 0,
+      maxHeartRate: data['maxHeartRate'] ?? 0,
+      elevationGain:
+          (data['elevationGain'] as num?)?.toDouble() ??
+          0.0, // Fix: Handle null
+      timestamp:
+          data['timestamp'] != null
+              ? (data['timestamp'] as Timestamp).toDate()
+              : DateTime.now(),
       routePoints:
-          data['routePoints'] != null
-              ? List<Map<String, dynamic>>.from(data['routePoints'])
-              : null,
+          (data['routeCoordinates'] as List<dynamic>?)
+              ?.map(
+                (coord) => {
+                  'latitude': (coord['latitude'] as num?)?.toDouble() ?? 0.0,
+                  'longitude': (coord['longitude'] as num?)?.toDouble() ?? 0.0,
+                },
+              )
+              .toList() ??
+          [],
+      trainingDayId: data['trainingDayId'],
+      notes: data['notes'] ?? '',
+      weather: data['weather'] ?? '',
+      temperature:
+          (data['temperature'] as num?)?.toDouble() ?? 0.0, // Fix: Handle null
+      humidity:
+          (data['humidity'] as num?)?.toDouble() ?? 0.0, // Fix: Handle null
+      windSpeed:
+          (data['windSpeed'] as num?)?.toDouble() ?? 0.0, // Fix: Handle null
     );
   }
 
@@ -86,17 +126,21 @@ class RunModel {
   Map<String, dynamic> toFirestore() {
     return {
       'userId': userId,
-      'trainingDayId': trainingDayId,
-      'startTime': timestamp,
+      'distance': distance,
       'duration': duration,
-      'totalDistance': distance,
+      'pace': pace,
+      'calories': calories,
+      'avgHeartRate': avgHeartRate,
+      'maxHeartRate': maxHeartRate,
       'elevationGain': elevationGain,
-      'avgSpeed': avgSpeed,
-      'steps': steps,
-      'voiceEnabled': voiceEnabled,
-      'vibrationOnly': vibrationOnly,
-      'shared': shared,
-      'routePoints': routePoints,
+      'timestamp': Timestamp.fromDate(timestamp),
+      'routeCoordinates': routePoints ?? [],
+      'trainingDayId': trainingDayId,
+      'notes': notes,
+      'weather': weather,
+      'temperature': temperature,
+      'humidity': humidity,
+      'windSpeed': windSpeed,
     };
   }
 
@@ -114,6 +158,15 @@ class RunModel {
     bool? vibrationOnly,
     bool? shared,
     List<Map<String, dynamic>>? routePoints,
+    double? pace,
+    int? calories,
+    int? avgHeartRate,
+    int? maxHeartRate,
+    double? temperature,
+    double? humidity,
+    double? windSpeed,
+    String? notes,
+    String? weather,
   }) {
     return RunModel(
       id: this.id,
@@ -129,6 +182,15 @@ class RunModel {
       vibrationOnly: vibrationOnly ?? this.vibrationOnly,
       shared: shared ?? this.shared,
       routePoints: routePoints ?? this.routePoints,
+      pace: pace ?? this.pace,
+      calories: calories ?? this.calories,
+      avgHeartRate: avgHeartRate ?? this.avgHeartRate,
+      maxHeartRate: maxHeartRate ?? this.maxHeartRate,
+      temperature: temperature ?? this.temperature,
+      humidity: humidity ?? this.humidity,
+      windSpeed: windSpeed ?? this.windSpeed,
+      notes: notes ?? this.notes,
+      weather: weather ?? this.weather,
     );
   }
 
