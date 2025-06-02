@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:marunthon_app/models/training_day_model.dart';
 
 class RunModel {
   final String id;
@@ -223,3 +224,34 @@ class RunModel {
     return "${km.toStringAsFixed(2)} km";
   }
 }
+
+// // When saving a run from training, ensure trainingDayId is set
+// // In your run creation/saving logic:
+
+// Future<void> completeTrainingRun(
+//   TrainingDayModel trainingDay,
+//   RunModel run,
+// ) async {
+//   // Ensure the run has the training day ID
+//   final updatedRun = RunModel(
+//     id: run.id,
+//     userId: run.userId,
+//     distance: run.distance,
+//     duration: run.duration,
+//     pace: run.pace,
+//     calories: run.calories,
+//     avgHeartRate: run.avgHeartRate,
+//     maxHeartRate: run.maxHeartRate,
+//     elevation: run.elevation,
+//     timestamp: run.timestamp,
+//     routeCoordinates: run.routeCoordinates,
+//     trainingDayId: trainingDay.id, // IMPORTANT: Set this
+//     notes: run.notes,
+//     weather: run.weather,
+//     temperature: run.temperature,
+//     humidity: run.humidity,
+//     windSpeed: run.windSpeed,
+//   );
+
+//   await _runService.createRun(updatedRun);
+// }
