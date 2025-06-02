@@ -21,76 +21,174 @@ class TrainingPlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Calculate progress percentage
-    double progress = totalDays > 0 ? daysCompleted / totalDays : 0;
+    final double progressPercentage =
+        totalDays > 0 ? (daysCompleted / totalDays) : 0.0;
+    final int daysRemaining = totalDays - daysCompleted;
 
     return Card(
-      margin: EdgeInsets.only(bottom: 16),
-      color: AppColors.cardBg,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: AppColors.background,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  "Training Plan",
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                Icon(Icons.fitness_center, color: AppColors.primary, size: 24),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    activePlan.goalType,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ),
-                Text(
-                  "Week $currentWeek of $totalWeeks",
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'Week $currentWeek/$totalWeeks',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 4),
-            Text(
-              activePlan.goalType,
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-            ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-            // Progress bar
-            LinearProgressIndicator(
-              value: progress,
-              backgroundColor: Colors.grey[300],
-              color: AppColors.primary,
-              minHeight: 8,
-            ),
-            SizedBox(height: 8),
-
-            // Progress stats
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // Progress Bar
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "$daysCompleted days completed",
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Progress',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    Text(
+                      '${(progressPercentage * 100).toInt()}%',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                LinearProgressIndicator(
+                  value: progressPercentage,
+                  backgroundColor: Colors.grey[300],
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  minHeight: 6,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Stats Row
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatItem(
+                    'Completed',
+                    '$daysCompleted',
+                    'days',
+                    Colors.green,
                   ),
                 ),
-                Text(
-                  "${(totalDays - daysCompleted)} days remaining",
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
+                Expanded(
+                  child: _buildStatItem(
+                    'Remaining',
+                    '$daysRemaining',
+                    'days',
+                    Colors.orange,
+                  ),
+                ),
+                Expanded(
+                  child: _buildStatItem(
+                    'Total',
+                    '$totalDays',
+                    'days',
+                    AppColors.primary,
                   ),
                 ),
               ],
             ),
+
+            // Show completion message if plan is completed
+            if (daysCompleted >= totalDays) ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.celebration, color: Colors.green),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Congratulations! You have completed your training plan!',
+                        style: TextStyle(
+                          color: Colors.green[700],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildStatItem(String label, String value, String unit, Color color) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        Text(
+          unit,
+          style: TextStyle(
+            fontSize: 12,
+            color: color,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+      ],
     );
   }
 }
