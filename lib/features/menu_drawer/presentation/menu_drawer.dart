@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 import 'package:marunthon_app/features/home/home_page.dart';
 import 'package:marunthon_app/features/settings/settings_page.dart';
 import 'package:marunthon_app/features/auth/presentation/login_page.dart';
@@ -105,66 +106,114 @@ class _MenuDrawerState extends State<MenuDrawer> {
         userName = user.displayName ?? "Runner";
       });
     } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginPage()),
-      );
+      // Use GoRouter instead of Navigator.pushReplacement
+      if (mounted) {
+        context.go('/login');
+      }
     }
   }
 
   void _onMenuItemTapped(String item) {
+    // Close the drawer first
+    Navigator.of(context).pop();
+
     // Handle menu item tap
     print("Tapped on $item");
     switch (item) {
       case 'Home':
-        // Navigate to Home
+        // Navigate to Home - Use GoRouter
         AnalyticsService.setCurrentScreen('HomePage');
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => HomePage()),
-        );
+        context.go('/'); // This will navigate to home
         break;
       case 'Profile':
-        // Navigate to Profile
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => UserProfileScreen()),
-        );
+        // Navigate to Profile - Use GoRouter
+        context.go('/profile');
         break;
       case 'My Runs':
         // Navigate to My Runs
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => MyRunsPage()),
-        // );
+        context.go('/my-runs');
         break;
       case 'Settings':
-        // Navigate to Settings
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => SettingsPage()),
-        );
+        // Navigate to Settings - Use GoRouter
+        context.go('/settings');
         break;
       case 'About':
         // Navigate to About
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => AboutPage()),
-        // );
+        context.go('/about');
         break;
       case 'Logout':
-        // Handle logout
-        AnalyticsService.logEvent('logout', {'method': 'menu_drawer'});
-        FirebaseAuth.instance.signOut();
-        AnalyticsService.setCurrentScreen('LoginPage');
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => LoginPage()),
-        );
+        // Handle logout properly
+        _handleLogout();
         break;
       default:
         print("Unknown menu item: $item");
+    }
+  }
+
+  // Add this method to handle logout properly
+  Future<void> _handleLogout() async {
+    // Show confirmation dialog
+    final bool? shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Logout'),
+          content: const Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Logout'),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldLogout == true) {
+      try {
+        // Show loading
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder:
+              (context) => const Center(child: CircularProgressIndicator()),
+        );
+
+        // Log analytics
+        AnalyticsService.logEvent('logout', {'method': 'menu_drawer'});
+
+        // Sign out
+        await FirebaseAuth.instance.signOut();
+
+        // Close loading dialog
+        if (mounted) Navigator.of(context).pop();
+
+        // Navigate to login
+        if (mounted) {
+          AnalyticsService.setCurrentScreen('LoginPage');
+          context.go('/login');
+        }
+      } catch (e) {
+        print('Logout error: $e');
+
+        // Close loading dialog
+        if (mounted) Navigator.of(context).pop();
+
+        // Show error
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Logout failed: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
