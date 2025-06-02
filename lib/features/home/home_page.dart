@@ -1,20 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:marunthon_app/core/widgets/app_button.dart';
 import 'package:marunthon_app/features/menu_drawer/presentation/menu_drawer.dart';
 import 'package:marunthon_app/core/services/analytics_service.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
-import 'package:marunthon_app/models/run_model.dart';
-import 'package:marunthon_app/models/user_model.dart';
-import 'package:marunthon_app/models/training_plan_model.dart';
-import 'package:marunthon_app/models/training_day_model.dart';
-import 'package:intl/intl.dart';
 import 'package:marunthon_app/core/services/run_service.dart';
 import 'package:marunthon_app/core/services/user_service.dart';
 import 'package:marunthon_app/core/services/training_plan_service.dart';
 import 'package:marunthon_app/core/services/training_day_service.dart';
 import 'package:marunthon_app/features/log_run/run_tracking_pag.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 // Import components
 import 'package:marunthon_app/features/home/components/welcome_card.dart';
@@ -23,185 +20,43 @@ import 'package:marunthon_app/features/home/components/today_training_card.dart'
 import 'package:marunthon_app/features/home/components/no_plan_card.dart';
 import 'package:marunthon_app/features/home/components/recent_runs_section.dart';
 import 'package:marunthon_app/features/home/components/upcoming_training_section.dart';
-import 'package:marunthon_app/features/home/utils/date_utils.dart'
-    as AppDateUtils;
-import 'package:lucide_icons/lucide_icons.dart';
 
-class HomePage extends StatefulWidget {
+// Import BLoC
+import 'bloc/home_bloc.dart';
+import 'bloc/home_event.dart';
+import 'bloc/home_state.dart';
+
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
-  _HomePageState createState() => _HomePageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create:
+          (context) => HomeBloc(
+            auth: FirebaseAuth.instance,
+            userService: UserService(),
+            trainingPlanService: TrainingPlanService(),
+            trainingDayService: TrainingDayService(),
+            runService: RunService(),
+          )..add(const LoadHomeData()),
+      child: const HomeView(),
+    );
+  }
 }
 
-class _HomePageState extends State<HomePage> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final RunService _runService = RunService();
-  final UserService _userService = UserService();
-  final TrainingPlanService _trainingPlanService = TrainingPlanService();
-  final TrainingDayService _trainingDayService = TrainingDayService();
+class HomeView extends StatefulWidget {
+  const HomeView({super.key});
 
-  UserModel? _userModel;
-  TrainingPlanModel? _activePlan;
-  List<TrainingDayModel> _upcomingTrainingDays = [];
-  List<RunModel> _recentRuns = [];
-  bool _isLoading = true;
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
 
-  // Training progress stats
-  int _daysCompleted = 0;
-  int _totalDays = 0;
-  int _currentWeek = 0;
-  int _totalWeeks = 0;
-  TrainingDayModel? _todaysTraining;
-
+class _HomeViewState extends State<HomeView> {
   @override
   void initState() {
     super.initState();
     AnalyticsService.setCurrentScreen('HomePage');
-    _loadUserData();
-  }
-
-  Future<void> _loadUserData() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      // Get current Firebase user
-      User? user = _auth.currentUser;
-      if (user == null) {
-        context.go('/login');
-        return;
-      }
-
-      // Load user model
-      final userModel = await _userService.getUserProfile(user.uid);
-      if (userModel == null) {
-        context.go('/profile-setup');
-        return;
-      }
-
-      // Load active training plan
-      final activePlan = await _trainingPlanService.getActiveTrainingPlan(
-        user.uid,
-      );
-
-      // Load recent runs - limit to 5
-      final recentRuns = await _runService.getUserRuns(user.uid);
-      recentRuns.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-      final limitedRuns = recentRuns.take(5).toList();
-
-      // If there's an active plan, get upcoming training days and stats
-      List<TrainingDayModel> upcomingDays = [];
-      TrainingDayModel? todayTraining;
-      int daysCompleted = 0;
-      int totalDays = 0;
-      int currentWeek = 1;
-      int totalWeeks = 0;
-
-      if (activePlan != null) {
-        // Get all training days for plan
-        final allTrainingDays = await _trainingDayService
-            .getTrainingDaysForPlan(activePlan.id);
-        totalDays = allTrainingDays.length;
-        totalWeeks = activePlan.weeks;
-
-        // Find today's date
-        final today = DateTime(
-          DateTime.now().year,
-          DateTime.now().month,
-          DateTime.now().day,
-        );
-        final tomorrow = today.add(Duration(days: 1));
-        final endOfWeek = today.add(Duration(days: 7));
-
-        // Filter for today's training
-        todayTraining = allTrainingDays.firstWhere(
-          (day) =>
-              day.dateScheduled != null &&
-              AppDateUtils.DateUtils.isSameDay(day.dateScheduled!, today),
-          orElse:
-              () => TrainingDayModel(
-                id: '',
-                planId: activePlan.id,
-                week: 1,
-                dayOfWeek: today.weekday,
-                optional: false,
-                runPhases: [],
-              ),
-        );
-
-        // Get upcoming days (next 7 days including today)
-        upcomingDays =
-            allTrainingDays
-                .where(
-                  (day) =>
-                      day.dateScheduled != null &&
-                      day.dateScheduled!.isAfter(
-                        today.subtract(Duration(days: 1)),
-                      ) &&
-                      day.dateScheduled!.isBefore(endOfWeek),
-                )
-                .toList();
-
-        upcomingDays.sort(
-          (a, b) => a.dateScheduled!.compareTo(b.dateScheduled!),
-        );
-
-        // Calculate days completed
-        for (var run in recentRuns) {
-          if (run.trainingDayId != null) {
-            daysCompleted++;
-          }
-        }
-
-        // Find current week
-        if (todayTraining.id.isNotEmpty) {
-          currentWeek = todayTraining.week;
-        } else {
-          // Calculate week based on start date
-          final firstDay = allTrainingDays.firstWhere(
-            (day) => day.dateScheduled != null,
-            orElse:
-                () => TrainingDayModel(
-                  id: '',
-                  planId: activePlan.id,
-                  week: 1,
-                  dayOfWeek: 1,
-                  optional: false,
-                  runPhases: [],
-                ),
-          );
-
-          if (firstDay.dateScheduled != null) {
-            final diff = today.difference(firstDay.dateScheduled!).inDays;
-            currentWeek = (diff ~/ 7) + 1;
-            if (currentWeek > totalWeeks) currentWeek = totalWeeks;
-            if (currentWeek < 1) currentWeek = 1;
-          }
-        }
-      }
-
-      if (!mounted) return;
-      setState(() {
-        _userModel = userModel;
-        _activePlan = activePlan;
-        _recentRuns = limitedRuns;
-        _upcomingTrainingDays = upcomingDays;
-        _daysCompleted = daysCompleted;
-        _totalDays = totalDays;
-        _currentWeek = currentWeek;
-        _totalWeeks = totalWeeks;
-        _todaysTraining = todayTraining;
-        _isLoading = false;
-      });
-    } catch (e) {
-      print('Error loading home data: $e');
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-      });
-    }
   }
 
   @override
@@ -217,121 +72,235 @@ class _HomePageState extends State<HomePage> {
         elevation: 0,
         iconTheme: IconThemeData(color: AppColors.textPrimary),
       ),
-      drawer: MenuDrawer(),
-      body:
-          _isLoading
-              ? Center(child: CircularProgressIndicator())
-              : _userModel == null
-              // Handle case when user model is null
-              ? _buildNoUserView()
-              : RefreshIndicator(
-                onRefresh: _loadUserData,
-                child: SingleChildScrollView(
-                  physics: AlwaysScrollableScrollPhysics(),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Welcome Card - Now safe to use _userModel!
-                        WelcomeCard(userModel: _userModel!),
-                        SizedBox(height: 24),
+      drawer: const MenuDrawer(),
+      body: BlocConsumer<HomeBloc, HomeState>(
+        listener: (context, state) {
+          if (state is HomeProfileNotFound) {
+            context.go('/profile-setup');
+          } else if (state is HomeError &&
+              state.message.contains('not authenticated')) {
+            context.go('/login');
+          }
+        },
+        builder: (context, state) {
+          if (state is HomeLoading || state is HomeInitial) {
+            return _buildLoadingView();
+          }
 
-                        // Training Plan Progress Card
-                        if (_activePlan != null)
-                          TrainingPlanCard(
-                            activePlan: _activePlan!,
-                            daysCompleted: _daysCompleted,
-                            totalDays: _totalDays,
-                            currentWeek: _currentWeek,
-                            totalWeeks: _totalWeeks,
-                          ),
+          if (state is HomeProfileNotFound) {
+            return _buildNoUserView(context);
+          }
 
-                        // Today's Training
-                        if (_todaysTraining != null && _activePlan != null)
-                          TodayTrainingCard(todaysTraining: _todaysTraining!),
+          if (state is HomeError) {
+            return _buildErrorView(context, state.message);
+          }
 
-                        // No Plan Card
-                        if (_activePlan == null) NoPlanCard(),
+          if (state is HomeLoaded) {
+            return _buildHomeContent(context, state);
+          }
 
-                        SizedBox(height: 24),
-
-                        // Recent Runs Section
-                        RecentRunsSection(recentRuns: _recentRuns),
-
-                        // Upcoming Training Days Section
-                        if (_upcomingTrainingDays.isNotEmpty)
-                          UpcomingTrainingSection(
-                            upcomingDays: _upcomingTrainingDays,
-                            todaysTraining: _todaysTraining,
-                          ),
-
-                        SizedBox(height: 80), // For bottom padding
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-      // --- Run Action Button ---
-      floatingActionButton:
-          _userModel != null &&
-                  (_todaysTraining != null && _todaysTraining!.id.isNotEmpty)
-              ? FloatingActionButton.extended(
+          return _buildLoadingView();
+        },
+      ),
+      floatingActionButton: BlocBuilder<HomeBloc, HomeState>(
+        builder: (context, state) {
+          if (state is HomeLoaded) {
+            if (state.todaysTraining != null &&
+                state.todaysTraining!.id.isNotEmpty) {
+              return FloatingActionButton.extended(
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder:
-                          (context) => RunTrackingPage(
-                            //trainingDayId:_todaysTraining!.id, // UNCOMMENT THIS LINE
+                          (context) => const RunTrackingPage(
+                            //trainingDayId: state.todaysTraining!.id, // UNCOMMENT THIS LINE
                           ),
                     ),
                   );
                 },
                 backgroundColor: AppColors.primary,
-                icon: Icon(LucideIcons.play),
-                label: Text("Start Today's Run"),
-              )
-              : _userModel != null
-              ? FloatingActionButton.extended(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => RunTrackingPage()),
-                  );
-                },
-                backgroundColor: AppColors.primary,
-                icon: Icon(LucideIcons.play),
-                label: Text("Quick Run"),
-              )
-              : null, // Don't show the FAB if userModel is null
+                icon: const Icon(LucideIcons.play),
+                label: const Text("Start Today's Run"),
+              );
+            }
+          }
+          return const SizedBox.shrink(); // No button when loading or error
+        },
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
-  // Add this method to handle the case when user model is null
-  Widget _buildNoUserView() {
+  Widget _buildLoadingView() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: 16),
+          Text('Loading your dashboard...'),
+        ],
+      ),
+    );
+  }
+
+  // Update the _buildHomeContent method to handle empty data gracefully
+  Widget _buildHomeContent(BuildContext context, HomeLoaded state) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        context.read<HomeBloc>().add(const RefreshHomeData());
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Welcome Card
+              WelcomeCard(userModel: state.userModel),
+              const SizedBox(height: 24),
+
+              // Training Plan Progress Card
+              if (state.activePlan != null)
+                TrainingPlanCard(
+                  activePlan: state.activePlan!,
+                  daysCompleted: state.daysCompleted,
+                  totalDays: state.totalDays,
+                  currentWeek: state.currentWeek,
+                  totalWeeks: state.totalWeeks,
+                ),
+
+              // Today's Training
+              if (state.todaysTraining != null &&
+                  state.todaysTraining!.id.isNotEmpty &&
+                  state.activePlan != null)
+                TodayTrainingCard(todaysTraining: state.todaysTraining!),
+
+              // No Plan Card
+              if (state.activePlan == null) const NoPlanCard(),
+
+              const SizedBox(height: 24),
+
+              // Recent Runs Section - Only show if we have runs
+              if (state.recentRuns.isNotEmpty)
+                RecentRunsSection(recentRuns: state.recentRuns)
+              else
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.directions_run,
+                          size: 48,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'No runs yet',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Start your first run to see your progress here',
+                          style: TextStyle(color: Colors.grey[500]),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+              // Upcoming Training Days Section
+              if (state.upcomingTrainingDays.isNotEmpty)
+                UpcomingTrainingSection(
+                  upcomingDays: state.upcomingTrainingDays,
+                  todaysTraining: state.todaysTraining,
+                ),
+
+              const SizedBox(height: 80), // For bottom padding
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoUserView(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.account_circle, size: 80, color: AppColors.secondary),
-          SizedBox(height: 16),
-          Text(
-            "Profile information not available",
+          const SizedBox(height: 16),
+          const Text(
+            "Profile Setup Required",
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             "Please set up your profile to continue",
             style: TextStyle(color: Colors.grey[600]),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           AppButton(
             onPressed: () {
               context.go('/profile-setup');
             },
             text: "Set Up Profile",
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorView(BuildContext context, String errorMessage) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 80, color: Colors.red[300]),
+          const SizedBox(height: 16),
+          const Text(
+            "Unable to Load Dashboard",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              errorMessage,
+              style: TextStyle(color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AppButton(
+                onPressed: () {
+                  context.read<HomeBloc>().add(const LoadHomeData());
+                },
+                text: "Retry",
+                width: 120,
+              ),
+              const SizedBox(width: 16),
+              AppButton(
+                onPressed: () {
+                  context.go('/profile-setup');
+                },
+                text: "Setup Profile",
+                backgroundColor: Colors.grey[600],
+                width: 140,
+              ),
+            ],
           ),
         ],
       ),
