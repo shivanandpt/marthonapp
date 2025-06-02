@@ -115,16 +115,29 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: Text('Profile', style: TextStyle(color: AppColors.textPrimary)),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // Smart navigation - go back if possible, otherwise go home
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              context.go('/');
+            }
+          },
+        ),
         actions: [
-          if (_userModel != null)
-            IconButton(
-              icon: Icon(LucideIcons.edit),
-              onPressed: () {
-                context.push('/profile-edit');
-              },
-            ),
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () => context.go('/profile-edit'),
+            tooltip: 'Edit Profile',
+          ),
         ],
       ),
       body: _buildBody(),
