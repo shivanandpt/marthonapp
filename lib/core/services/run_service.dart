@@ -2,14 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:marunthon_app/models/run_model.dart';
 
 class RunService {
-  final FirebaseFirestore _firestore;
-  final CollectionReference<Map<String, dynamic>> _runsCollection;
-
-  RunService({FirebaseFirestore? firestore})
-    : _firestore = firestore ?? FirebaseFirestore.instance,
-      _runsCollection = (firestore ?? FirebaseFirestore.instance).collection(
-        'runs',
-      );
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final CollectionReference _runsCollection = FirebaseFirestore.instance
+      .collection('runs');
 
   // Create new run
   Future<String> createRun(RunModel run) async {
@@ -27,7 +22,10 @@ class RunService {
     try {
       final docSnapshot = await _runsCollection.doc(runId).get();
       if (docSnapshot.exists) {
-        return RunModel.fromFirestore(docSnapshot.data()!, docSnapshot.id);
+        return RunModel.fromFirestore(
+          docSnapshot.data()! as Map<String, dynamic>,
+          docSnapshot.id,
+        );
       }
       return null;
     } catch (e) {
@@ -39,18 +37,55 @@ class RunService {
   // Get all runs for a user
   Future<List<RunModel>> getUserRuns(String userId) async {
     try {
+      print('Fetching runs for user: $userId');
+
       final querySnapshot =
           await _runsCollection
               .where('userId', isEqualTo: userId)
-              .orderBy('startTime', descending: true)
+              .orderBy('timestamp', descending: true)
               .get();
 
-      return querySnapshot.docs
-          .map((doc) => RunModel.fromFirestore(doc.data(), doc.id))
-          .toList();
+      print('Found ${querySnapshot.docs.length} runs');
+
+      final List<RunModel> runs = [];
+
+      for (var doc in querySnapshot.docs) {
+        try {
+          final data = doc.data() as Map<String, dynamic>;
+          print('Processing run doc: ${doc.id}');
+
+          // Validate required fields before creating model
+          if (data['userId'] == null) {
+            print('Warning: Run ${doc.id} has null userId, skipping');
+            continue;
+          }
+
+          final run = RunModel.fromFirestore(data, doc.id);
+          runs.add(run);
+        } catch (e) {
+          print('Error processing run document ${doc.id}: $e');
+          print('Document data: ${doc.data()}');
+          // Continue processing other documents instead of failing completely
+          continue;
+        }
+      }
+
+      print('Successfully processed ${runs.length} runs');
+      return runs;
     } catch (e) {
       print('Error getting user runs: $e');
-      rethrow;
+      // Return empty list instead of throwing error to prevent app crash
+      return [];
+    }
+  }
+
+  // Add method to get runs with better error handling
+  Future<List<RunModel>> getUserRunsSafe(String userId) async {
+    try {
+      return await getUserRuns(userId);
+    } catch (e) {
+      print('Failed to get user runs: $e');
+      return []; // Return empty list on any error
     }
   }
 
@@ -64,7 +99,12 @@ class RunService {
               .get();
 
       return querySnapshot.docs
-          .map((doc) => RunModel.fromFirestore(doc.data(), doc.id))
+          .map(
+            (doc) => RunModel.fromFirestore(
+              doc.data() as Map<String, dynamic>,
+              doc.id,
+            ),
+          )
           .toList();
     } catch (e) {
       print('Error getting runs for training day: $e');
@@ -108,7 +148,12 @@ class RunService {
               .get();
 
       return querySnapshot.docs
-          .map((doc) => RunModel.fromFirestore(doc.data(), doc.id))
+          .map(
+            (doc) => RunModel.fromFirestore(
+              doc.data() as Map<String, dynamic>,
+              doc.id,
+            ),
+          )
           .toList();
     } catch (e) {
       print('Error getting runs in date range: $e');
@@ -125,7 +170,12 @@ class RunService {
         .map(
           (snapshot) =>
               snapshot.docs
-                  .map((doc) => RunModel.fromFirestore(doc.data(), doc.id))
+                  .map(
+                    (doc) => RunModel.fromFirestore(
+                      doc.data() as Map<String, dynamic>,
+                      doc.id,
+                    ),
+                  )
                   .toList(),
         );
   }

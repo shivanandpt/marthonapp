@@ -4,6 +4,7 @@ import 'package:marunthon_app/features/auth/presentation/login_page.dart';
 import 'package:marunthon_app/features/home/home_page.dart';
 import 'package:marunthon_app/features/user_profile/setup/screens/user_profile_setup_screen.dart';
 import 'package:marunthon_app/features/user_profile/setup/screens/user_setup_complete_screen.dart';
+import 'package:marunthon_app/features/user_profile/user_profile_screen.dart';
 
 class AppRoutes {
   final GoRouter router = GoRouter(
@@ -19,6 +20,10 @@ class AppRoutes {
         path: '/profile-edit',
         builder:
             (context, state) => const UserProfileSetupScreen(isEditMode: true),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const UserProfileScreen(),
       ),
       GoRoute(
         path: '/setup-complete',
