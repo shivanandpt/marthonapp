@@ -5,11 +5,10 @@ import 'package:marunthon_app/core/services/user_service.dart';
 import 'package:marunthon_app/core/services/training_plan_service.dart';
 import 'package:marunthon_app/core/services/training_day_service.dart';
 import 'package:marunthon_app/core/services/run_service.dart';
-import 'package:marunthon_app/features/home/utils/date_utils.dart'
-    as AppDateUtils;
 import 'package:marunthon_app/models/run_model.dart';
 import 'package:marunthon_app/models/training_day_model.dart';
 import 'package:marunthon_app/models/training_plan_model.dart';
+import 'package:marunthon_app/models/user_model.dart';
 
 import 'home_event.dart';
 import 'home_state.dart';
@@ -79,34 +78,43 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       );
       print('Active plan loaded: ${activePlan?.goalType ?? 'No active plan'}');
 
-      // Load ALL runs for proper completion calculation
+      // Load ALL runs for calculation (not limited)
       List<RunModel> allRuns = [];
-      List<RunModel> recentRuns = [];
       try {
+        print('Fetching ALL runs for user: ${user.uid}');
         allRuns = await _runService.getUserRuns(user.uid);
-        allRuns.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-        recentRuns = allRuns.take(5).toList(); // Keep only 5 for display
-        print(
-          'Loaded ${allRuns.length} total runs, showing ${recentRuns.length} recent',
-        );
+        print('Loaded ${allRuns.length} total runs for calculation');
+
+        // Debug: Print all runs with training day IDs
+        for (var run in allRuns) {
+          print(
+            'Run: ${run.id}, Date: ${run.timestamp}, TrainingDayId: ${run.trainingDayId}',
+          );
+        }
       } catch (e) {
-        print('Failed to load runs, continuing with empty list: $e');
+        print('Failed to load runs: $e');
         allRuns = [];
-        recentRuns = [];
       }
 
-      // Calculate training data using ALL runs, not just recent
+      // Calculate training data using ALL runs
       final trainingData = await _calculateTrainingData(
         activePlan,
         allRuns,
         user.uid,
       );
 
+      // Get only recent runs for display (separate from calculation)
+      final recentRuns = allRuns.take(5).toList();
+      recentRuns.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
+      print('Displaying ${recentRuns.length} recent runs in UI');
+      print('Used ${allRuns.length} runs for progress calculation');
+
       emit(
         HomeLoaded(
           userModel: userModel,
           activePlan: activePlan,
-          recentRuns: recentRuns, // Show only recent runs in UI
+          recentRuns: recentRuns, // Only for display
           upcomingTrainingDays: trainingData.upcomingDays,
           todaysTraining: trainingData.todaysTraining,
           daysCompleted: trainingData.daysCompleted,
@@ -128,6 +136,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   ) async {
     try {
       if (activePlan == null) {
+        print('No active training plan found');
         return _TrainingData(
           upcomingDays: [],
           todaysTraining: null,
@@ -148,7 +157,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       final totalWeeks = activePlan.weeks;
 
       print('Total training days in plan: $totalDays');
-      print('Total runs found: ${allRuns.length}');
+      print('Total runs available for calculation: ${allRuns.length}');
 
       // Create a set of all training day IDs from the plan
       final allTrainingDayIds =
@@ -157,47 +166,67 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
               .where((id) => id.isNotEmpty)
               .toSet();
 
-      print('All training day IDs: $allTrainingDayIds');
+      print('All training day IDs in plan: $allTrainingDayIds');
 
-      // Create a set of completed training day IDs from runs
-      final completedTrainingDayIds =
+      // Find runs that have valid training day IDs
+      final runsWithTrainingDayIds =
           allRuns
               .where(
                 (run) =>
                     run.trainingDayId != null && run.trainingDayId!.isNotEmpty,
               )
+              .toList();
+
+      print('Runs with training day IDs: ${runsWithTrainingDayIds.length}');
+
+      // Create a set of completed training day IDs from runs
+      final completedTrainingDayIds =
+          runsWithTrainingDayIds
               .map((run) => run.trainingDayId!)
-              .where(
-                (id) => allTrainingDayIds.contains(id),
-              ) // Only count valid training day IDs
+              .where((id) => allTrainingDayIds.contains(id))
               .toSet();
 
-      print('Completed training day IDs: $completedTrainingDayIds');
+      print('Valid completed training day IDs: $completedTrainingDayIds');
 
       // Calculate progress
       final daysCompleted = completedTrainingDayIds.length;
       final daysRemaining = totalDays - daysCompleted;
 
+      print('=== TRAINING PROGRESS CALCULATION ===');
+      print('Total training days in plan: $totalDays');
       print('Days completed: $daysCompleted');
       print('Days remaining: $daysRemaining');
+      print(
+        'Progress: ${totalDays > 0 ? (daysCompleted / totalDays * 100).toInt() : 0}%',
+      );
 
-      // Debug: Print all runs with their training day IDs
+      // Debug: Print detailed run analysis
+      print('\n=== RUN ANALYSIS ===');
       for (var run in allRuns) {
+        final isTrainingRun =
+            run.trainingDayId != null && run.trainingDayId!.isNotEmpty;
+        final isValidTrainingRun =
+            isTrainingRun && allTrainingDayIds.contains(run.trainingDayId);
+
+        print('Run ${run.id}:');
         print(
-          'Run: ${run.id}, Date: ${run.timestamp.day}/${run.timestamp.month}/${run.timestamp.year}, '
-          'TrainingDayId: ${run.trainingDayId}, '
-          'Valid: ${run.trainingDayId != null && allTrainingDayIds.contains(run.trainingDayId)}',
+          '  Date: ${run.timestamp.day}/${run.timestamp.month}/${run.timestamp.year}',
         );
+        print('  Training Day ID: ${run.trainingDayId ?? 'None'}');
+        print('  Is Training Run: $isTrainingRun');
+        print('  Is Valid Training Run: $isValidTrainingRun');
+        print('  ---');
       }
 
       // Find today's date
       final today = DateTime.now();
       final todayDate = DateTime(today.year, today.month, today.day);
 
-      // Find today's training and upcoming days
-      TrainingDayModel? todayTraining;
+      // Declare these variables OUTSIDE the loop
+      TrainingDayModel? todaysTraining;
       final List<TrainingDayModel> upcomingDays = [];
 
+      // Find today's training and upcoming days
       for (var day in allTrainingDays) {
         if (day.dateScheduled != null) {
           final dayDate = DateTime(
@@ -208,7 +237,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
           // Check if it's today's training
           if (dayDate.isAtSameMomentAs(todayDate)) {
-            todayTraining = day;
+            todaysTraining = day;
+            print('Found today\'s training: ${day.id}');
           }
 
           // Add to upcoming days (next 7 days including today)
@@ -231,8 +261,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
       // Calculate current week
       int currentWeek = 1;
-      if (todayTraining != null) {
-        currentWeek = todayTraining.week;
+      if (todaysTraining != null) {
+        currentWeek = todaysTraining.week;
       } else if (daysCompleted > 0) {
         // Find the latest completed training day to determine current week
         TrainingDayModel? latestCompletedDay;
@@ -270,12 +300,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       if (currentWeek > totalWeeks) currentWeek = totalWeeks;
       if (currentWeek < 1) currentWeek = 1;
 
-      print('Current week: $currentWeek');
+      print('Current week: $currentWeek/$totalWeeks');
       print('Upcoming training days: ${upcomingDays.length}');
 
       return _TrainingData(
         upcomingDays: upcomingDays,
-        todaysTraining: todayTraining,
+        todaysTraining: todaysTraining,
         daysCompleted: daysCompleted,
         totalDays: totalDays,
         currentWeek: currentWeek,

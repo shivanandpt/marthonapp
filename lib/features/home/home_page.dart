@@ -10,7 +10,7 @@ import 'package:marunthon_app/core/services/run_service.dart';
 import 'package:marunthon_app/core/services/user_service.dart';
 import 'package:marunthon_app/core/services/training_plan_service.dart';
 import 'package:marunthon_app/core/services/training_day_service.dart';
-import 'package:marunthon_app/features/log_run/run_tracking_pag.dart';
+import 'package:marunthon_app/features/runs/run_tracking_pag.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 // Import components

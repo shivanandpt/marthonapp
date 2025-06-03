@@ -20,7 +20,7 @@ class TrainingPlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate progress percentage
+    // Calculate progress and remaining days
     final double progressPercentage =
         totalDays > 0 ? (daysCompleted / totalDays) : 0.0;
     final int daysRemaining = totalDays - daysCompleted;
@@ -38,13 +38,25 @@ class TrainingPlanCard extends StatelessWidget {
                 Icon(Icons.fitness_center, color: AppColors.primary, size: 24),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    activePlan.goalType,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        activePlan.goalType,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        activePlan.goalType,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 Container(
@@ -77,7 +89,7 @@ class TrainingPlanCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Progress',
+                      'Training Progress',
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
                         color: AppColors.textSecondary,
@@ -97,7 +109,15 @@ class TrainingPlanCard extends StatelessWidget {
                   value: progressPercentage,
                   backgroundColor: Colors.grey[300],
                   valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                  minHeight: 6,
+                  minHeight: 8,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$daysCompleted of $totalDays training days completed',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -110,7 +130,7 @@ class TrainingPlanCard extends StatelessWidget {
                   child: _buildStatItem(
                     'Completed',
                     '$daysCompleted',
-                    'days',
+                    'training days',
                     Colors.green,
                   ),
                 ),
@@ -118,15 +138,15 @@ class TrainingPlanCard extends StatelessWidget {
                   child: _buildStatItem(
                     'Remaining',
                     '$daysRemaining',
-                    'days',
-                    Colors.orange,
+                    'training days',
+                    daysRemaining > 0 ? Colors.orange : Colors.grey,
                   ),
                 ),
                 Expanded(
                   child: _buildStatItem(
-                    'Total',
-                    '$totalDays',
-                    'days',
+                    'Duration',
+                    '${activePlan.weeks}',
+                    'weeks',
                     AppColors.primary,
                   ),
                 ),
@@ -134,7 +154,7 @@ class TrainingPlanCard extends StatelessWidget {
             ),
 
             // Show completion message if plan is completed
-            if (daysCompleted >= totalDays) ...[
+            if (daysCompleted >= totalDays && totalDays > 0) ...[
               const SizedBox(height: 16),
               Container(
                 width: double.infinity,
@@ -173,18 +193,20 @@ class TrainingPlanCard extends StatelessWidget {
         Text(
           value,
           style: TextStyle(
-            fontSize: 24,
+            fontSize: 20,
             fontWeight: FontWeight.bold,
             color: color,
           ),
         ),
+        const SizedBox(height: 2),
         Text(
           unit,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 10,
             color: color,
             fontWeight: FontWeight.w500,
           ),
+          textAlign: TextAlign.center,
         ),
         const SizedBox(height: 4),
         Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
