@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
 import 'package:marunthon_app/features/home/utils/workout_phase_icons.dart';
-import 'package:marunthon_app/features/log_run/run_tracking_pag.dart';
+import 'package:marunthon_app/features/runs/run_tracking_pag.dart';
 import 'package:marunthon_app/models/training_day_model.dart';
 
 class TodayTrainingCard extends StatelessWidget {
@@ -58,24 +58,24 @@ class TodayTrainingCard extends StatelessWidget {
             SizedBox(height: 16),
 
             // Training details based on run phases
-            if (todaysTraining.runPhases.isNotEmpty)
+            if (todaysTraining.parsedRunPhases.isNotEmpty)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ...todaysTraining.runPhases.map((phase) {
+                  ...todaysTraining.parsedRunPhases.map((runPhase) {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: Row(
                         children: [
                           Icon(
-                            WorkoutPhaseIcons.getPhaseIcon(phase['type']),
+                            WorkoutPhaseIcons.getPhaseIcon(runPhase.phase),
                             color: AppColors.primary,
                             size: 20,
                           ),
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              "${phase['duration']} min ${phase['type']}",
+                              "${runPhase.formattedDuration} ${runPhase.phase}",
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -86,6 +86,33 @@ class TodayTrainingCard extends StatelessWidget {
                       ),
                     );
                   }).toList(),
+
+                  SizedBox(height: 8),
+                  Container(
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          LucideIcons.clock,
+                          color: AppColors.primary,
+                          size: 16,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          "Total Duration: ${todaysTraining.formattedTotalDuration}",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               )
             else
