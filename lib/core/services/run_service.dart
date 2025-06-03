@@ -22,10 +22,8 @@ class RunService {
     try {
       final docSnapshot = await _runsCollection.doc(runId).get();
       if (docSnapshot.exists) {
-        return RunModel.fromFirestore(
-          docSnapshot.data()! as Map<String, dynamic>,
-          docSnapshot.id,
-        );
+        // Pass the DocumentSnapshot directly
+        return RunModel.fromFirestore(docSnapshot);
       }
       return null;
     } catch (e) {
@@ -37,44 +35,33 @@ class RunService {
   // Get all runs for a user
   Future<List<RunModel>> getUserRuns(String userId) async {
     try {
-      print('Fetching runs for user: $userId');
+      print('Fetching ALL runs for user: $userId');
 
       final querySnapshot =
           await _runsCollection
               .where('userId', isEqualTo: userId)
-              .orderBy('timestamp', descending: true)
+              .orderBy('startTime', descending: true)
               .get();
 
-      print('Found ${querySnapshot.docs.length} runs');
+      final runs =
+          querySnapshot.docs
+              .map((doc) {
+                try {
+                  // Pass the DocumentSnapshot directly, not the data
+                  return RunModel.fromFirestore(doc);
+                } catch (e) {
+                  print('Error parsing run ${doc.id}: $e');
+                  return null;
+                }
+              })
+              .where((run) => run != null)
+              .cast<RunModel>()
+              .toList();
 
-      final List<RunModel> runs = [];
-
-      for (var doc in querySnapshot.docs) {
-        try {
-          final data = doc.data() as Map<String, dynamic>;
-          print('Processing run doc: ${doc.id}');
-
-          // Validate required fields before creating model
-          if (data['userId'] == null) {
-            print('Warning: Run ${doc.id} has null userId, skipping');
-            continue;
-          }
-
-          final run = RunModel.fromFirestore(data, doc.id);
-          runs.add(run);
-        } catch (e) {
-          print('Error processing run document ${doc.id}: $e');
-          print('Document data: ${doc.data()}');
-          // Continue processing other documents instead of failing completely
-          continue;
-        }
-      }
-
-      print('Successfully processed ${runs.length} runs');
+      print('Successfully loaded ${runs.length} runs for user $userId');
       return runs;
     } catch (e) {
       print('Error getting user runs: $e');
-      // Return empty list instead of throwing error to prevent app crash
       return [];
     }
   }
@@ -99,12 +86,7 @@ class RunService {
               .get();
 
       return querySnapshot.docs
-          .map(
-            (doc) => RunModel.fromFirestore(
-              doc.data() as Map<String, dynamic>,
-              doc.id,
-            ),
-          )
+          .map((doc) => RunModel.fromFirestore(doc))
           .toList();
     } catch (e) {
       print('Error getting runs for training day: $e');
@@ -148,12 +130,7 @@ class RunService {
               .get();
 
       return querySnapshot.docs
-          .map(
-            (doc) => RunModel.fromFirestore(
-              doc.data() as Map<String, dynamic>,
-              doc.id,
-            ),
-          )
+          .map((doc) => RunModel.fromFirestore(doc))
           .toList();
     } catch (e) {
       print('Error getting runs in date range: $e');
@@ -169,14 +146,7 @@ class RunService {
         .snapshots()
         .map(
           (snapshot) =>
-              snapshot.docs
-                  .map(
-                    (doc) => RunModel.fromFirestore(
-                      doc.data() as Map<String, dynamic>,
-                      doc.id,
-                    ),
-                  )
-                  .toList(),
+              snapshot.docs.map((doc) => RunModel.fromFirestore(doc)).toList(),
         );
   }
 
