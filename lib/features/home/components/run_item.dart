@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
 import 'package:marunthon_app/features/runs/run_detail_page.dart';
-import 'package:marunthon_app/models/run_model.dart';
+import 'package:marunthon_app/features/runs/models/run_model.dart';
 
 class RunItem extends StatelessWidget {
   final RunModel run;

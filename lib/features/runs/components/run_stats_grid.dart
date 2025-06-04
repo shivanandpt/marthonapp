@@ -1,6 +1,6 @@
 // lib/features/runs/components/run_stats_grid.dart
 import 'package:flutter/material.dart';
-import 'package:marunthon_app/models/run_model.dart';
+import 'package:marunthon_app/features/runs/models/run_model.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'stat_box.dart';

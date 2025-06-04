@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
-import 'package:marunthon_app/models/training_plan_model.dart';
+import 'package:marunthon_app/features/home/models/training_plan_model.dart';
 
 class TrainingPlanCard extends StatelessWidget {
   final TrainingPlanModel activePlan;

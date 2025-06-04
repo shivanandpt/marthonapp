@@ -1,9 +1,9 @@
 // lib/features/home/bloc/home_state.dart
 import 'package:equatable/equatable.dart';
-import 'package:marunthon_app/models/user_model.dart';
-import 'package:marunthon_app/models/training_plan_model.dart';
-import 'package:marunthon_app/models/training_day_model.dart';
-import 'package:marunthon_app/models/run_model.dart';
+import 'package:marunthon_app/features/user/user_profile/setup/models/user_model.dart';
+import 'package:marunthon_app/features/home/models/training_plan_model.dart';
+import 'package:marunthon_app/features/home/models/training_day_model.dart';
+import 'package:marunthon_app/features/runs/models/run_model.dart';
 
 abstract class HomeState extends Equatable {
   const HomeState();
