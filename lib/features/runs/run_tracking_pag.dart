@@ -4,7 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:async';
 import 'package:location/location.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:marunthon_app/core/services/run_service.dart';
+import 'package:marunthon_app/features/runs/services/run_service.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
 
 class RunTrackingPage extends StatefulWidget {

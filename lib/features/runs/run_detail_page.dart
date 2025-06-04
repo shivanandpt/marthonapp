@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:marunthon_app/models/run_model.dart';
+import 'package:marunthon_app/features/runs/models/run_model.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
 import 'components/run_header.dart';
 import 'components/run_stats_grid.dart';
