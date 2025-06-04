@@ -1,14 +1,14 @@
 // lib/features/home/bloc/home_bloc.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:marunthon_app/core/services/user_service.dart';
-import 'package:marunthon_app/core/services/training_plan_service.dart';
-import 'package:marunthon_app/core/services/training_day_service.dart';
-import 'package:marunthon_app/core/services/run_service.dart';
-import 'package:marunthon_app/models/run_model.dart';
-import 'package:marunthon_app/models/training_day_model.dart';
-import 'package:marunthon_app/models/training_plan_model.dart';
-import 'package:marunthon_app/models/user_model.dart';
+import 'package:marunthon_app/features/user/user_profile/setup/services/user_service.dart';
+import 'package:marunthon_app/features/home/services/training_plan_service.dart';
+import 'package:marunthon_app/features/home/services/training_day_service.dart';
+import 'package:marunthon_app/features/runs/services/run_service.dart';
+import 'package:marunthon_app/features/runs/models/run_model.dart';
+import 'package:marunthon_app/features/home/models/training_day_model.dart';
+import 'package:marunthon_app/features/home/models/training_plan_model.dart';
+import 'package:marunthon_app/features/user/user_profile/setup/models/user_model.dart';
 
 import 'home_event.dart';
 import 'home_state.dart';

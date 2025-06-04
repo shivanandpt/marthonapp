@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart'; // Make sure this is imported
 import '../data/firebase_service.dart';
-import 'package:marunthon_app/core/services/user_profile_service.dart';
-import 'package:marunthon_app/core/services/user_service.dart';
+import 'package:marunthon_app/features/user/user_profile/setup/services/user_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:marunthon_app/core/services/analytics_service.dart';
-import 'package:marunthon_app/models/user_profile.dart';
-import 'package:marunthon_app/features/user_profile/setup/screens/user_profile_setup_screen.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,8 +14,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final FirebaseService _firebaseService = FirebaseService();
-  final UserProfileService _userService = UserProfileService();
-  final UserService _newUserService = UserService();
+  final UserService _userService = UserService();
 
   @override
   void initState() {
@@ -38,7 +34,7 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _checkProfileAndNavigate(User user) async {
     try {
       // First try to get profile from the new UserService
-      var userModel = await _newUserService.getUserProfile(user.uid);
+      var userModel = await _userService.getUserProfile(user.uid);
 
       if (userModel != null) {
         // Profile exists in the new system, check if it's complete
@@ -57,7 +53,7 @@ class _LoginPageState extends State<LoginPage> {
       }
 
       // Check old user profile system as fallback
-      var oldUserProfile = await _userService.fetchUserProfile(user.uid);
+      var oldUserProfile = await _userService.getUserProfile(user.uid);
       if (oldUserProfile != null) {
         // Old profile exists but not migrated to new system
         // Either migrate first or direct to setup
@@ -97,7 +93,7 @@ class _LoginPageState extends State<LoginPage> {
         AnalyticsService.logEvent('login', {'method': '_handleSignIn'});
 
         // Check if user already exists in the new system
-        var userModel = await _newUserService.getUserProfile(user.uid);
+        var userModel = await _userService.getUserProfile(user.uid);
 
         if (userModel != null && _isProfileComplete(userModel)) {
           // User exists with complete profile, go to home
@@ -105,21 +101,6 @@ class _LoginPageState extends State<LoginPage> {
           // FIXED: Using GoRouter instead of Navigator.pushReplacementNamed
           context.go('/');
           return;
-        }
-
-        // For legacy support - Check if user already exists in old Firestore
-        var oldUserProfile = await _userService.fetchUserProfile(user.uid);
-
-        if (oldUserProfile == null) {
-          // Create basic record in old system for backward compatibility
-          await _userService.storeUserProfile(
-            user.uid,
-            UserProfile(
-              name: user.displayName ?? "Runner",
-              email: user.email ?? "",
-              profilePicPath: user.photoURL ?? "",
-            ),
-          );
         }
 
         // Regardless of old profile, direct to new profile setup

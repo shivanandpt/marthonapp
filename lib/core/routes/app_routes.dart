@@ -3,10 +3,10 @@ import 'package:go_router/go_router.dart';
 import 'package:marunthon_app/features/auth/presentation/login_page.dart';
 import 'package:marunthon_app/features/home/home_page.dart';
 import 'package:marunthon_app/features/runs/run_detail_page.dart';
-import 'package:marunthon_app/features/user_profile/setup/screens/user_profile_setup_screen.dart';
-import 'package:marunthon_app/features/user_profile/setup/screens/user_setup_complete_screen.dart';
-import 'package:marunthon_app/features/user_profile/user_profile_screen.dart';
-import 'package:marunthon_app/models/run_model.dart';
+import 'package:marunthon_app/features/user/user_profile/setup/screens/user_profile_setup_screen.dart';
+import 'package:marunthon_app/features/user/user_profile/setup/screens/user_setup_complete_screen.dart';
+import 'package:marunthon_app/features/user/user_profile/presentation/user_profile_screen.dart';
+import 'package:marunthon_app/features/runs/models/run_model.dart';
 
 class AppRoutes {
   final GoRouter router = GoRouter(

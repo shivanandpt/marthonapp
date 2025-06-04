@@ -5,7 +5,7 @@ import 'package:marunthon_app/core/theme/app_colors.dart';
 import 'package:marunthon_app/features/home/utils/date_utils.dart';
 import 'package:marunthon_app/features/home/utils/workout_phase_icons.dart';
 import 'package:marunthon_app/features/runs/run_tracking_pag.dart';
-import 'package:marunthon_app/models/training_day_model.dart';
+import 'package:marunthon_app/features/home/models/training_day_model.dart';
 
 class TrainingDayItem extends StatelessWidget {
   final TrainingDayModel day;

@@ -1,7 +1,7 @@
 // lib/features/runs/components/run_map.dart
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:marunthon_app/models/run_model.dart';
+import 'package:marunthon_app/features/runs/models/run_model.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
 
 class RunMap extends StatefulWidget {

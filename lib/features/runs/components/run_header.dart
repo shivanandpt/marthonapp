@@ -1,7 +1,7 @@
 // lib/features/runs/components/run_header.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:marunthon_app/models/run_model.dart';
+import 'package:marunthon_app/features/runs/models/run_model.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
 
 class RunHeader extends StatelessWidget {

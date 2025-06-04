@@ -6,10 +6,10 @@ import 'package:marunthon_app/core/widgets/app_button.dart';
 import 'package:marunthon_app/features/menu_drawer/presentation/menu_drawer.dart';
 import 'package:marunthon_app/core/services/analytics_service.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
-import 'package:marunthon_app/core/services/run_service.dart';
-import 'package:marunthon_app/core/services/user_service.dart';
-import 'package:marunthon_app/core/services/training_plan_service.dart';
-import 'package:marunthon_app/core/services/training_day_service.dart';
+import 'package:marunthon_app/features/runs/services/run_service.dart';
+import 'package:marunthon_app/features/user/user_profile/setup/services/user_service.dart';
+import 'package:marunthon_app/features/home/services/training_plan_service.dart';
+import 'package:marunthon_app/features/home/services/training_day_service.dart';
 import 'package:marunthon_app/features/runs/run_tracking_pag.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 

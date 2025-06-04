@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
-import 'package:marunthon_app/models/user_model.dart';
+import 'package:marunthon_app/features/user/user_profile/setup/models/user_model.dart';
 
 class WelcomeCard extends StatelessWidget {
   final UserModel userModel;
