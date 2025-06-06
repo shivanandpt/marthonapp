@@ -15,3 +15,18 @@ class LoadHomeData extends HomeEvent {
 class RefreshHomeData extends HomeEvent {
   const RefreshHomeData();
 }
+
+// Add event for deleting runs
+class DeleteRun extends HomeEvent {
+  final String runId;
+
+  const DeleteRun(this.runId);
+
+  @override
+  List<Object?> get props => [runId];
+}
+
+// Add event for refreshing runs after deletion
+class RefreshRuns extends HomeEvent {
+  const RefreshRuns();
+}

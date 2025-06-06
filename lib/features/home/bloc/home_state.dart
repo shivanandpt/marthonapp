@@ -28,6 +28,7 @@ class HomeLoaded extends HomeState {
   final UserModel userModel;
   final TrainingPlanModel? activePlan;
   final List<RunModel> recentRuns;
+  final List<RunModel> allRuns; // Add this line for all runs
   final List<TrainingDayModel> upcomingTrainingDays;
   final TrainingDayModel? todaysTraining;
   final int daysCompleted;
@@ -39,6 +40,7 @@ class HomeLoaded extends HomeState {
     required this.userModel,
     this.activePlan,
     required this.recentRuns,
+    required this.allRuns, // Add this parameter
     required this.upcomingTrainingDays,
     this.todaysTraining,
     required this.daysCompleted,
@@ -52,6 +54,7 @@ class HomeLoaded extends HomeState {
     userModel,
     activePlan,
     recentRuns,
+    allRuns, // Add to props
     upcomingTrainingDays,
     todaysTraining,
     daysCompleted,
@@ -59,6 +62,33 @@ class HomeLoaded extends HomeState {
     currentWeek,
     totalWeeks,
   ];
+
+  // Add copyWith method for easy state updates
+  HomeLoaded copyWith({
+    UserModel? userModel,
+    TrainingPlanModel? activePlan,
+    List<RunModel>? recentRuns,
+    List<RunModel>? allRuns,
+    List<TrainingDayModel>? upcomingTrainingDays,
+    TrainingDayModel? todaysTraining,
+    int? daysCompleted,
+    int? totalDays,
+    int? currentWeek,
+    int? totalWeeks,
+  }) {
+    return HomeLoaded(
+      userModel: userModel ?? this.userModel,
+      activePlan: activePlan ?? this.activePlan,
+      recentRuns: recentRuns ?? this.recentRuns,
+      allRuns: allRuns ?? this.allRuns,
+      upcomingTrainingDays: upcomingTrainingDays ?? this.upcomingTrainingDays,
+      todaysTraining: todaysTraining ?? this.todaysTraining,
+      daysCompleted: daysCompleted ?? this.daysCompleted,
+      totalDays: totalDays ?? this.totalDays,
+      currentWeek: currentWeek ?? this.currentWeek,
+      totalWeeks: totalWeeks ?? this.totalWeeks,
+    );
+  }
 }
 
 class HomeError extends HomeState {
