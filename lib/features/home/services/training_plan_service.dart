@@ -1,145 +1,88 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:marunthon_app/features/home/models/training_plan_model.dart';
+import 'plan/training_plan_core_service.dart';
+import 'plan/training_plan_query_service.dart';
+import 'plan/training_plan_update_service.dart';
+import 'plan/training_plan_management_service.dart';
+import 'plan/training_plan_statistics_service.dart';
+import 'plan/training_plan_stream_service.dart';
+import '../models/training_plan_model.dart';
 
 class TrainingPlanService {
-  final FirebaseFirestore _firestore;
-  final CollectionReference<Map<String, dynamic>> _plansCollection;
+  late final TrainingPlanCoreService _coreService;
+  late final TrainingPlanQueryService _queryService;
+  late final TrainingPlanUpdateService _updateService;
+  late final TrainingPlanManagementService _managementService;
+  late final TrainingPlanStatisticsService _statisticsService;
+  late final TrainingPlanStreamService _streamService;
 
-  TrainingPlanService({FirebaseFirestore? firestore})
-    : _firestore = firestore ?? FirebaseFirestore.instance,
-      _plansCollection = (firestore ?? FirebaseFirestore.instance).collection(
-        'training_plans',
-      );
-
-  // Create new training plan
-  Future<String> createTrainingPlan(TrainingPlanModel plan) async {
-    try {
-      final docRef = await _plansCollection.add(plan.toFirestore());
-      return docRef.id;
-    } catch (e) {
-      print('Error creating training plan: $e');
-      rethrow;
-    }
+  TrainingPlanService() {
+    _coreService = TrainingPlanCoreService();
+    _queryService = TrainingPlanQueryService(_coreService);
+    _updateService = TrainingPlanUpdateService(_coreService);
+    _managementService = TrainingPlanManagementService(
+      _coreService,
+      _queryService,
+    );
+    _statisticsService = TrainingPlanStatisticsService(
+      _coreService,
+      _queryService,
+    );
+    _streamService = TrainingPlanStreamService(_coreService);
   }
 
-  // Get training plan by ID
-  Future<TrainingPlanModel?> getTrainingPlan(String planId) async {
-    try {
-      final docSnapshot = await _plansCollection.doc(planId).get();
-      if (docSnapshot.exists) {
-        return TrainingPlanModel.fromFirestore(
-          docSnapshot.data()!,
-          docSnapshot.id,
-        );
-      }
-      return null;
-    } catch (e) {
-      print('Error getting training plan: $e');
-      rethrow;
-    }
-  }
+  // Core operations
+  Future<String> createTrainingPlan(TrainingPlanModel plan) =>
+      _coreService.createTrainingPlan(plan);
 
-  // Get all training plans for a user
-  Future<List<TrainingPlanModel>> getUserTrainingPlans(String userId) async {
-    try {
-      final querySnapshot =
-          await _plansCollection.where('userId', isEqualTo: userId).get();
+  Future<TrainingPlanModel?> getTrainingPlan(String planId) =>
+      _coreService.getTrainingPlan(planId);
 
-      return querySnapshot.docs
-          .map((doc) => TrainingPlanModel.fromFirestore(doc.data(), doc.id))
-          .toList();
-    } catch (e) {
-      print('Error getting user training plans: $e');
-      rethrow;
-    }
-  }
+  Future<void> updateTrainingPlan(TrainingPlanModel plan) =>
+      _coreService.updateTrainingPlan(plan);
 
-  // Get active training plan for a user
-  Future<TrainingPlanModel?> getActiveTrainingPlan(String userId) async {
-    try {
-      final querySnapshot =
-          await _plansCollection
-              .where('userId', isEqualTo: userId)
-              .where('isActive', isEqualTo: true)
-              .limit(1)
-              .get();
+  Future<void> deleteTrainingPlan(String planId) =>
+      _coreService.deleteTrainingPlan(planId);
 
-      if (querySnapshot.docs.isNotEmpty) {
-        return TrainingPlanModel.fromFirestore(
-          querySnapshot.docs.first.data(),
-          querySnapshot.docs.first.id,
-        );
-      }
-      return null;
-    } catch (e) {
-      print('Error getting active training plan: $e');
-      rethrow;
-    }
-  }
+  // Query operations
+  Future<List<TrainingPlanModel>> getUserTrainingPlans(String userId) =>
+      _queryService.getUserTrainingPlans(userId);
 
-  // Update training plan
-  Future<void> updateTrainingPlan(TrainingPlanModel plan) async {
-    try {
-      await _plansCollection.doc(plan.id).update(plan.toFirestore());
-    } catch (e) {
-      print('Error updating training plan: $e');
-      rethrow;
-    }
-  }
+  Future<TrainingPlanModel?> getActiveTrainingPlan(String userId) =>
+      _queryService.getActiveTrainingPlan(userId);
 
-  // Delete training plan
-  Future<void> deleteTrainingPlan(String planId) async {
-    try {
-      await _plansCollection.doc(planId).delete();
-    } catch (e) {
-      print('Error deleting training plan: $e');
-      rethrow;
-    }
-  }
+  Future<List<TrainingPlanModel>> searchPlans(
+    String userId,
+    String searchTerm,
+  ) => _queryService.searchPlans(userId, searchTerm);
 
-  // Set a training plan as active and deactivate others
-  Future<void> setActiveTrainingPlan(String userId, String planId) async {
-    try {
-      // Start a batch write
-      final batch = _firestore.batch();
+  // Management operations
+  Future<void> markPlanAsCompleted(String planId) =>
+      _managementService.markPlanAsCompleted(planId);
 
-      // First, deactivate all plans for this user
-      final plansToUpdate =
-          await _plansCollection
-              .where('userId', isEqualTo: userId)
-              .where('isActive', isEqualTo: true)
-              .get();
+  Future<void> pausePlan(String planId) => _managementService.pausePlan(planId);
 
-      for (var doc in plansToUpdate.docs) {
-        batch.update(doc.reference, {'isActive': false});
-      }
+  Future<void> resumePlan(String planId) =>
+      _managementService.resumePlan(planId);
 
-      // Then, activate the selected plan
-      batch.update(_plansCollection.doc(planId), {'isActive': true});
+  // Statistics operations
+  Future<Map<String, dynamic>> getPlanSummary(String planId) =>
+      _statisticsService.getPlanSummary(planId);
 
-      // Commit the batch
-      await batch.commit();
-    } catch (e) {
-      print('Error setting active training plan: $e');
-      rethrow;
-    }
-  }
+  Future<Map<String, dynamic>> getUserPlanStats(String userId) =>
+      _statisticsService.getUserPlanStats(userId);
 
-  // Stream active training plan for real-time updates
-  Stream<TrainingPlanModel?> streamActiveTrainingPlan(String userId) {
-    return _plansCollection
-        .where('userId', isEqualTo: userId)
-        .where('isActive', isEqualTo: true)
-        .limit(1)
-        .snapshots()
-        .map((snapshot) {
-          if (snapshot.docs.isNotEmpty) {
-            return TrainingPlanModel.fromFirestore(
-              snapshot.docs.first.data(),
-              snapshot.docs.first.id,
-            );
-          }
-          return null;
-        });
-  }
+  // Stream operations
+  Stream<List<TrainingPlanModel>> streamUserTrainingPlans(String userId) =>
+      _streamService.streamUserTrainingPlans(userId);
+
+  Stream<TrainingPlanModel?> streamActiveTrainingPlan(String userId) =>
+      _streamService.streamActiveTrainingPlan(userId);
+
+  // Expose sub-services for advanced usage
+  TrainingPlanCoreService get core => _coreService;
+  TrainingPlanQueryService get query => _queryService;
+  TrainingPlanUpdateService get update => _updateService;
+  TrainingPlanManagementService get management => _managementService;
+  TrainingPlanStatisticsService get statistics => _statisticsService;
+  TrainingPlanStreamService get stream => _streamService;
 }
