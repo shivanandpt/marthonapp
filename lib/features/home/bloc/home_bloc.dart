@@ -114,6 +114,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         HomeLoaded(
           userModel: userModel,
           activePlan: activePlan,
+          allRuns: allRuns,
           recentRuns: recentRuns, // Only for display
           upcomingTrainingDays: trainingData.upcomingDays,
           todaysTraining: trainingData.todaysTraining,
