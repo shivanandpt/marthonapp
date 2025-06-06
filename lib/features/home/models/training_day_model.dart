@@ -1,12 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'day_identification_model.dart';
-import 'day_scheduling_model.dart';
-import 'day_configuration_model.dart';
-import 'day_status_model.dart';
-import 'training_phase_model.dart';
-import 'day_totals_model.dart';
-import 'day_target_metrics_model.dart';
-import 'day_completion_data_model.dart';
+import 'days/day_identification_model.dart';
+import 'days/day_scheduling_model.dart';
+import 'days/day_configuration_model.dart';
+import 'days/day_status_model.dart';
+import 'days/training_phase_model.dart';
+import 'days/day_totals_model.dart';
+import 'days/day_target_metrics_model.dart';
+import 'days/day_completion_data_model.dart';
 
 class TrainingDayModel {
   final String id;
@@ -152,9 +152,61 @@ class TrainingDayModel {
     );
   }
 
-  // Convert TrainingDayModel to Firestore document
-  Map<String, dynamic> toFirestore() {
+  // Convert Map to TrainingDayModel
+  factory TrainingDayModel.fromMap(Map<String, dynamic> data) {
+    // Parse run phases
+    final phasesList =
+        (data['runPhases'] as List<dynamic>? ?? [])
+            .map(
+              (phase) =>
+                  TrainingPhaseModel.fromMap(phase as Map<String, dynamic>),
+            )
+            .toList();
+
+    // Calculate totals from phases if not provided
+    final totals =
+        data['totals'] != null
+            ? DayTotalsModel.fromMap(data['totals'])
+            : DayTotalsModel.fromPhases(phasesList);
+
+    return TrainingDayModel(
+      id: data['id'] ?? '',
+      planId: data['planId'] ?? '',
+      identification: DayIdentificationModel.fromMap(
+        data['identification'] ?? data,
+      ),
+      scheduling: DaySchedulingModel.fromMap(data['scheduling'] ?? data),
+      configuration: DayConfigurationModel.fromMap(
+        data['configuration'] ?? data,
+      ),
+      status: DayStatusModel.fromMap(data['status'] ?? {}),
+      runPhases: phasesList,
+      totals: totals,
+      targetMetrics: DayTargetMetricsModel.fromMap(data['targetMetrics'] ?? {}),
+      completionData: DayCompletionDataModel.fromMap(
+        data['completionData'] ?? {},
+      ),
+      createdAt:
+          data['createdAt'] is DateTime
+              ? data['createdAt']
+              : (data['createdAt'] is Timestamp
+                  ? (data['createdAt'] as Timestamp).toDate()
+                  : DateTime.tryParse(data['createdAt']?.toString() ?? '') ??
+                      DateTime.now()),
+      updatedAt:
+          data['updatedAt'] is DateTime
+              ? data['updatedAt']
+              : (data['updatedAt'] is Timestamp
+                  ? (data['updatedAt'] as Timestamp).toDate()
+                  : DateTime.tryParse(data['updatedAt']?.toString() ?? '') ??
+                      DateTime.now()),
+    );
+  }
+
+  // Convert TrainingDayModel to Map
+  Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'planId': planId,
       'identification': identification.toMap(),
       'scheduling': scheduling.toMap(),
@@ -164,49 +216,11 @@ class TrainingDayModel {
       'totals': totals.toMap(),
       'targetMetrics': targetMetrics.toMap(),
       'completionData': completionData.toMap(),
-      'createdAt': Timestamp.fromDate(createdAt),
-      'updatedAt': Timestamp.fromDate(updatedAt),
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
     };
   }
 
-  // Helper methods for day management
-  TrainingDayModel markAsCompleted({
-    int? actualDuration,
-    double? actualDistance,
-  }) {
-    return copyWith(
-      status: status.copyWith(completed: true),
-      completionData: completionData.copyWith(
-        completedAt: DateTime.now(),
-        actualDuration: actualDuration,
-        actualDistance: actualDistance,
-      ),
-      updatedAt: DateTime.now(),
-    );
-  }
-
-  TrainingDayModel markAsSkipped() {
-    return copyWith(
-      status: status.copyWith(skipped: true),
-      updatedAt: DateTime.now(),
-    );
-  }
-
-  TrainingDayModel unlock() {
-    return copyWith(
-      status: status.copyWith(locked: false),
-      updatedAt: DateTime.now(),
-    );
-  }
-
-  TrainingDayModel lock() {
-    return copyWith(
-      status: status.copyWith(locked: true),
-      updatedAt: DateTime.now(),
-    );
-  }
-
-  // Create a copy with updated fields
   TrainingDayModel copyWith({
     String? id,
     String? planId,
@@ -221,9 +235,6 @@ class TrainingDayModel {
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
-    final newPhases = runPhases ?? this.runPhases;
-    final newTotals = totals ?? DayTotalsModel.fromPhases(newPhases);
-
     return TrainingDayModel(
       id: id ?? this.id,
       planId: planId ?? this.planId,
@@ -231,26 +242,12 @@ class TrainingDayModel {
       scheduling: scheduling ?? this.scheduling,
       configuration: configuration ?? this.configuration,
       status: status ?? this.status,
-      runPhases: newPhases,
-      totals: newTotals,
+      runPhases: runPhases ?? this.runPhases,
+      totals: totals ?? this.totals,
       targetMetrics: targetMetrics ?? this.targetMetrics,
       completionData: completionData ?? this.completionData,
       createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? DateTime.now(),
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
-
-  @override
-  String toString() {
-    return 'TrainingDayModel(id: $id, week: ${identification.week}, day: ${identification.dayOfWeek}, type: ${identification.sessionType})';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is TrainingDayModel && other.id == id;
-  }
-
-  @override
-  int get hashCode => id.hashCode;
 }

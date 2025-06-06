@@ -38,4 +38,26 @@ class RoutePointModel {
       'accuracy': accuracy,
     };
   }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'timestamp': Timestamp.fromDate(timestamp),
+      'latitude': latitude,
+      'longitude': longitude,
+      'elevation': elevation,
+      'speed': speed,
+      'accuracy': accuracy,
+    };
+  }
+
+  factory RoutePointModel.fromFirestore(Map<String, dynamic> data) {
+    return RoutePointModel(
+      timestamp: (data['timestamp'] as Timestamp).toDate(),
+      latitude: data['latitude']?.toDouble() ?? 0.0,
+      longitude: data['longitude']?.toDouble() ?? 0.0,
+      elevation: data['elevation']?.toDouble() ?? 0.0,
+      speed: data['speed']?.toDouble() ?? 0.0,
+      accuracy: data['accuracy']?.toDouble() ?? 0.0,
+    );
+  }
 }
