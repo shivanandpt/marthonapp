@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../models/day_status_model.dart';
+import '../../models/days/day_status_model.dart';
 import 'training_day_core_service.dart';
 
 class TrainingDayStatusService {

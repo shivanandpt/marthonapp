@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:marunthon_app/features/runs/models/run_phase_model.dart';
 import '../models/index.dart';
 
 class RunService {
@@ -603,5 +604,290 @@ class RunService {
       print('Error searching runs: $e');
       rethrow;
     }
+  }
+
+  /// Save a new run to Firestore with all required fields
+  Future<String> saveRun({
+    required String userId,
+    required double distance,
+    required int duration,
+    required List<Map<String, dynamic>> routePoints,
+    required DateTime startTime,
+    String? planId,
+    String? trainingDayId,
+    String sessionType = 'free_run',
+    int? pausedDuration,
+    int? activeDuration,
+    List<Map<String, dynamic>>? phasesCompleted,
+    Map<String, dynamic>? settings,
+    Map<String, dynamic>? socialSharing,
+    Map<String, dynamic>? feedback,
+    Map<String, dynamic>? heartRate,
+    Map<String, dynamic>? weather,
+  }) async {
+    try {
+      // Get next run number
+      final runNumber = await getNextRunNumber(userId);
+
+      // Calculate metrics
+      final actualActiveDuration = activeDuration ?? duration;
+      final actualPausedDuration = pausedDuration ?? 0;
+      final avgSpeed =
+          actualActiveDuration > 0
+              ? (distance * 1000) / actualActiveDuration
+              : 0.0; // m/s
+      final avgPace =
+          distance > 0 ? actualActiveDuration / distance : 0.0; // s/km
+      final elevationGain = _calculateElevationGain(routePoints);
+      final elevationLoss = _calculateElevationLoss(routePoints);
+
+      // Create route points
+      final routePointModels =
+          routePoints.map((point) {
+            return RoutePointModel(
+              timestamp: DateTime.fromMillisecondsSinceEpoch(
+                point['timestamp'],
+              ),
+              latitude: point['latitude'],
+              longitude: point['longitude'],
+              elevation: point['elevation'] ?? 0.0,
+              speed: point['speed'] ?? 0.0,
+              accuracy: point['accuracy'] ?? 0.0,
+            );
+          }).toList();
+
+      // Calculate max speed
+      final maxSpeed =
+          routePoints.isNotEmpty
+              ? routePoints
+                  .map((p) => p['speed'] ?? 0.0)
+                  .reduce((a, b) => a > b ? a : b)
+              : 0.0;
+
+      // Calculate best pace (assume same as avg pace for now)
+      final bestPace = avgPace;
+
+      // Calculate steps and calories
+      final steps = _estimateSteps(distance);
+      final calories = _estimateCalories(distance, actualActiveDuration);
+
+      // Default cadence (steps per minute)
+      final cadence =
+          actualActiveDuration > 0
+              ? (steps / (actualActiveDuration / 60)).round()
+              : 0;
+
+      // Calculate completion rate
+      final completionRate =
+          phasesCompleted != null ? 1.0 : 1.0; // 100% for completed runs
+
+      // Create the run model
+      final run = RunModel(
+        id: '', // Will be set by Firestore
+        userId: userId,
+        trainingDayId: trainingDayId,
+        planId: planId,
+        runNumber: runNumber,
+        sessionType: sessionType,
+        startTime: startTime,
+        endTime: startTime.add(Duration(seconds: duration)),
+        duration: duration,
+        activeDuration: actualActiveDuration,
+        pausedDuration: actualPausedDuration,
+        totalDistance: distance,
+        elevationGain: elevationGain,
+        elevationLoss: elevationLoss,
+        avgSpeed: avgSpeed,
+        maxSpeed: maxSpeed,
+        avgPace: avgPace,
+        bestPace: bestPace,
+        steps: steps,
+        cadence: cadence,
+        calories: calories,
+        heartRate: heartRate != null ? HeartRateModel.fromMap(heartRate) : null,
+        weather: weather != null ? WeatherModel.fromMap(weather) : null,
+        routePoints: routePointModels,
+        phasesCompleted:
+            phasesCompleted
+                ?.map((phase) => PhaseCompletionModel.fromMap(phase))
+                .toList() ??
+            [],
+        settings:
+            settings != null
+                ? RunSettingsModel.fromMap(settings)
+                : _getDefaultSettings(),
+        socialSharing:
+            socialSharing != null
+                ? SocialSharingModel.fromMap(socialSharing)
+                : _getDefaultSocialSharing(),
+        status: 'completed',
+        completionRate: completionRate,
+        feedback: feedback != null ? UserFeedbackModel.fromMap(feedback) : null,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      // Save to Firestore
+      final docRef = await _runsCollection.add(run.toFirestore());
+
+      print('Successfully saved run with ID: ${docRef.id}');
+      return docRef.id;
+    } catch (e) {
+      print('Error saving run: $e');
+      throw Exception('Failed to save run: $e');
+    }
+  }
+
+  /// Calculate elevation loss from route points
+  double _calculateElevationLoss(List<Map<String, dynamic>> routePoints) {
+    if (routePoints.length < 2) return 0.0;
+
+    double totalLoss = 0.0;
+    for (int i = 1; i < routePoints.length; i++) {
+      final current = routePoints[i]['elevation'] ?? 0.0;
+      final previous = routePoints[i - 1]['elevation'] ?? 0.0;
+      final loss =
+          previous - current; // Loss is when previous is higher than current
+      if (loss > 0) {
+        totalLoss += loss;
+      }
+    }
+    return totalLoss;
+  }
+
+  /// Calculate elevation gain from route points
+  double _calculateElevationGain(List<Map<String, dynamic>> routePoints) {
+    if (routePoints.length < 2) return 0.0;
+
+    double totalGain = 0.0;
+    for (int i = 1; i < routePoints.length; i++) {
+      final current = routePoints[i]['elevation'] ?? 0.0;
+      final previous = routePoints[i - 1]['elevation'] ?? 0.0;
+      final gain = current - previous;
+      if (gain > 0) {
+        totalGain += gain;
+      }
+    }
+    return totalGain;
+  }
+
+  /// Estimate calories burned (rough calculation)
+  int _estimateCalories(double distanceKm, int durationSeconds) {
+    try {
+      // More accurate calorie calculation based on MET values
+      // Running MET values: 8.0 for 8 km/h, 11.5 for 12 km/h, 15.0 for 16 km/h
+      const double avgBodyWeight = 70.0; // kg
+
+      if (durationSeconds == 0) return 0;
+
+      final speedKmh = (distanceKm / durationSeconds) * 3600;
+      double met = 8.0; // Default MET value
+
+      if (speedKmh >= 16) {
+        met = 15.0;
+      } else if (speedKmh >= 12) {
+        met = 11.5;
+      } else if (speedKmh >= 8) {
+        met = 8.0;
+      } else {
+        met = 6.0; // Walking/jogging
+      }
+
+      final durationHours = durationSeconds / 3600.0;
+      final calories = met * avgBodyWeight * durationHours;
+
+      return calories.round();
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  /// Estimate steps based on distance
+  int _estimateSteps(double distanceKm) {
+    try {
+      // Average stride length varies by height and pace
+      // Using 0.78m as average stride length for running
+      const double avgStrideLengthM = 0.78;
+      final distanceM = distanceKm * 1000;
+      final steps = (distanceM / avgStrideLengthM).round();
+      return steps;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  /// Batch upload pending runs from local storage
+  Future<List<String>> uploadPendingRuns(
+    List<Map<String, dynamic>> pendingRuns,
+  ) async {
+    final uploadedRunIds = <String>[];
+
+    for (final runData in pendingRuns) {
+      try {
+        final runId = await saveRun(
+          userId: runData['userId'],
+          distance: runData['distance'],
+          duration: runData['duration'],
+          routePoints: List<Map<String, dynamic>>.from(runData['routePoints']),
+          startTime: DateTime.parse(runData['startTime']),
+          planId: runData['planId'],
+          trainingDayId: runData['trainingDayId'],
+          sessionType: runData['sessionType'] ?? 'free_run',
+        );
+        uploadedRunIds.add(runData['id']); // Local ID for removal
+        print('Successfully uploaded pending run: ${runData['id']}');
+      } catch (e) {
+        print('Failed to upload run ${runData['id']}: $e');
+        // Continue with other runs even if one fails
+      }
+    }
+
+    return uploadedRunIds;
+  }
+
+  /// Save run with full RunModel (alternative method)
+  Future<String> saveRunModel(RunModel run) async {
+    try {
+      final docRef = await _runsCollection.add(run.toFirestore());
+      print('Saved run model with ID: ${docRef.id}');
+      return docRef.id;
+    } catch (e) {
+      print('Error saving run model: $e');
+      throw Exception('Failed to save run model: $e');
+    }
+  }
+
+  /// Quick save method for manual/simple runs
+  Future<String> saveQuickRun({
+    required String userId,
+    required double distance,
+    required int duration,
+    DateTime? startTime,
+    String sessionType = 'manual',
+  }) async {
+    try {
+      return await saveRun(
+        userId: userId,
+        distance: distance,
+        duration: duration,
+        routePoints: [], // No GPS data for quick runs
+        startTime:
+            startTime ?? DateTime.now().subtract(Duration(seconds: duration)),
+        sessionType: sessionType,
+      );
+    } catch (e) {
+      print('Error saving quick run: $e');
+      throw Exception('Failed to save quick run: $e');
+    }
+  }
+
+  /// Get default run settings
+  RunSettingsModel _getDefaultSettings() {
+    return RunSettingsModel.defaultSettings();
+  }
+
+  /// Get default social sharing settings
+  SocialSharingModel _getDefaultSocialSharing() {
+    return SocialSharingModel.defaultSettings();
   }
 }
