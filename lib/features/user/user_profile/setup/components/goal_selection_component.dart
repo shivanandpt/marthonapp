@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:marunthon_app/core/theme/app_colors.dart';
 import 'package:marunthon_app/features/user/user_profile/setup/controllers/user_profile_setup_controller.dart';
 
 class GoalSelectionComponent extends StatelessWidget {
@@ -51,7 +52,7 @@ class GoalSelectionComponent extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[800],
+              color: AppColors.textPrimary,
             ),
           ),
           SizedBox(height: 16),
@@ -69,10 +70,7 @@ class GoalSelectionComponent extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
                 side: BorderSide(
-                  color:
-                      isSelected
-                          ? Theme.of(context).primaryColor
-                          : Colors.grey[300]!,
+                  color: isSelected ? AppColors.primary : Colors.grey[300]!,
                   width: isSelected ? 2 : 1,
                 ),
               ),
@@ -91,18 +89,14 @@ class GoalSelectionComponent extends StatelessWidget {
                         decoration: BoxDecoration(
                           color:
                               isSelected
-                                  ? Theme.of(
-                                    context,
-                                  ).primaryColor.withOpacity(0.1)
+                                  ? AppColors.primary.withOpacity(0.1)
                                   : Colors.grey[100],
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
                           goal['icon'],
                           color:
-                              isSelected
-                                  ? Theme.of(context).primaryColor
-                                  : Colors.grey[600],
+                              isSelected ? AppColors.primary : Colors.grey[600],
                           size: 24,
                         ),
                       ),
@@ -120,7 +114,7 @@ class GoalSelectionComponent extends StatelessWidget {
                                 fontWeight: FontWeight.bold,
                                 color:
                                     isSelected
-                                        ? Theme.of(context).primaryColor
+                                        ? AppColors.primary
                                         : Colors.white,
                               ),
                             ),
@@ -145,13 +139,13 @@ class GoalSelectionComponent extends StatelessWidget {
                           border: Border.all(
                             color:
                                 isSelected
-                                    ? Theme.of(context).primaryColor
+                                    ? AppColors.primary
                                     : Colors.grey[400]!,
                             width: 2,
                           ),
                           color:
                               isSelected
-                                  ? Theme.of(context).primaryColor
+                                  ? AppColors.primary
                                   : Colors.transparent,
                         ),
                         child:
