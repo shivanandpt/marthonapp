@@ -221,6 +221,64 @@ class TrainingDayModel {
     };
   }
 
+  // Convert TrainingDayModel to Firestore document
+  Map<String, dynamic> toFirestore() {
+    return {
+      'planId': planId,
+      'identification': identification.toMap(),
+      'scheduling': scheduling.toMap(),
+      'configuration': configuration.toMap(),
+      'status': status.toMap(),
+      'runPhases': runPhases.map((p) => p.toMap()).toList(),
+      'totals': totals.toMap(),
+      'targetMetrics': targetMetrics.toMap(),
+      'completionData': completionData.toMap(),
+      'createdAt': Timestamp.fromDate(createdAt),
+      'updatedAt': Timestamp.fromDate(updatedAt),
+    };
+  }
+
+  // Mark training day as completed
+  TrainingDayModel markAsCompleted({
+    DateTime? completedAt,
+    int? actualDuration,
+    double? actualDistance,
+  }) {
+    return copyWith(
+      status: status.copyWith(completed: true),
+      completionData: completionData.copyWith(
+        completedAt: completedAt ?? DateTime.now(),
+        actualDuration: actualDuration,
+        actualDistance: actualDistance,
+      ),
+      updatedAt: DateTime.now(),
+    );
+  }
+
+  // Mark training day as skipped
+  TrainingDayModel markAsSkipped() {
+    return copyWith(
+      status: status.copyWith(skipped: true),
+      updatedAt: DateTime.now(),
+    );
+  }
+
+  // Lock training day
+  TrainingDayModel lock() {
+    return copyWith(
+      status: status.copyWith(locked: true),
+      updatedAt: DateTime.now(),
+    );
+  }
+
+  // Unlock training day
+  TrainingDayModel unlock() {
+    return copyWith(
+      status: status.copyWith(locked: false),
+      updatedAt: DateTime.now(),
+    );
+  }
+
   TrainingDayModel copyWith({
     String? id,
     String? planId,

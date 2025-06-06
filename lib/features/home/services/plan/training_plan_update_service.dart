@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:marunthon_app/features/home/models/plan/plan_structure_model.dart';
 import '../../models/plan/plan_dates_model.dart';
 import '../../models/plan/plan_progress_model.dart';
-import '../../models/plan/plan_dates_model.dart';
 import '../../models/plan/plan_settings_model.dart';
 import '../../models/plan/plan_statistics_model.dart';
 import 'training_plan_core_service.dart';
