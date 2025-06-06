@@ -19,10 +19,7 @@ class TrainingDayService {
     _queryService = TrainingDayQueryService(_coreService);
     _statusService = TrainingDayStatusService(_coreService);
     _streamService = TrainingDayStreamService(_coreService);
-    _statisticsService = TrainingDayStatisticsService(
-      _coreService,
-      _queryService,
-    );
+    _statisticsService = TrainingDayStatisticsService(_queryService);
     _batchService = TrainingDayBatchService(_coreService);
   }
 

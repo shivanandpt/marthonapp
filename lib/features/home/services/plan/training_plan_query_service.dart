@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/training_plan_model.dart';
 import 'training_plan_core_service.dart';
 

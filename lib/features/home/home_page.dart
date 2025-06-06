@@ -16,7 +16,6 @@ import 'bloc/home_event.dart';
 // Import components
 import 'components/home_page/home_app_bar.dart';
 import 'components/home_page/home_body.dart';
-import 'components/home_page/start_run_fab.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -58,8 +57,6 @@ class _HomeViewState extends State<HomeView> {
       appBar: const HomeAppBar(),
       drawer: const MenuDrawer(),
       body: const HomeBody(),
-      floatingActionButton: const StartRunFAB(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }

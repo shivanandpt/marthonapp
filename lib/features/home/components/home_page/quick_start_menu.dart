@@ -9,72 +9,68 @@ class QuickStartMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Quick Start',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _QuickStartButton(
-                  icon: LucideIcons.play,
-                  label: 'Free Run',
-                  color: AppColors.primary,
-                  onTap: () => _startFreeRun(context),
-                ),
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      color: Colors.black,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Quick Start',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _QuickStartButton(
-                  icon: LucideIcons.target,
-                  label: 'Interval Run',
-                  color: AppColors.secondary,
-                  onTap: () => _startIntervalRun(context),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _QuickStartButton(
+                    icon: LucideIcons.play,
+                    label: 'Free Run',
+                    color: AppColors.primary,
+                    onTap: () => _startFreeRun(context),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _QuickStartButton(
-                  icon: LucideIcons.clock,
-                  label: 'Easy Run',
-                  color: AppColors.accent,
-                  onTap: () => _startEasyRun(context),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickStartButton(
+                    icon: LucideIcons.target,
+                    label: 'Interval Run',
+                    color: AppColors.secondary,
+                    onTap: () => _startIntervalRun(context),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _QuickStartButton(
-                  icon: LucideIcons.activity,
-                  label: 'Recovery Run',
-                  color: Colors.green,
-                  onTap: () => _startRecoveryRun(context),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _QuickStartButton(
+                    icon: LucideIcons.clock,
+                    label: 'Easy Run',
+                    color: AppColors.accent,
+                    onTap: () => _startEasyRun(context),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickStartButton(
+                    icon: LucideIcons.activity,
+                    label: 'Recovery Run',
+                    color: Colors.green,
+                    onTap: () => _startRecoveryRun(context),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
