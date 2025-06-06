@@ -144,11 +144,11 @@ class _RunTrackingView extends StatelessWidget {
               },
               onEnd: () => _showEndConfirmation(context),
               onNextPhase:
-                  state.status == RunStatus.paused
+                  state.status == RunStatus.running
                       ? () => context.read<RunTrackingBloc>().add(NextPhase())
                       : null,
               onPreviousPhase:
-                  state.status == RunStatus.paused
+                  state.status == RunStatus.running
                       ? () =>
                           context.read<RunTrackingBloc>().add(PreviousPhase())
                       : null,

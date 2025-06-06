@@ -35,56 +35,119 @@ class RunControls extends StatelessWidget {
           // Main controls row
           Row(
             children: [
-              // Previous phase button
-              if (hasPreviousPhase && isPaused) ...[
-                Expanded(
-                  flex: 1,
-                  child: ElevatedButton(
-                    onPressed: onPreviousPhase,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.secondary.withOpacity(0.2),
-                      foregroundColor: AppColors.secondary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: Icon(LucideIcons.skipBack, size: 20),
-                  ),
-                ),
-                SizedBox(width: 12),
-              ],
-
-              // Play/Pause button
+              // Play/Pause button with integrated phase navigation
               Expanded(
-                flex: isPaused ? 2 : 3,
-                child: ElevatedButton(
-                  onPressed: onPlayPause,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        isPaused ? AppColors.success : AppColors.warning,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: EdgeInsets.symmetric(vertical: 20),
-                    elevation: 4,
+                flex: 3,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: isPaused ? AppColors.success : AppColors.warning,
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        isPaused ? LucideIcons.play : LucideIcons.pause,
-                        size: 24,
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        isPaused ? 'Resume' : 'Pause',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                      // Previous phase button (integrated, left side) - always shown when running
+                      if (!isPaused) ...[
+                        Expanded(
+                          flex: 1,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: hasPreviousPhase ? onPreviousPhase : null,
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(12),
+                                bottomLeft: Radius.circular(12),
+                              ),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 20),
+                                child: Icon(
+                                  LucideIcons.skipBack,
+                                  color:
+                                      hasPreviousPhase
+                                          ? Colors.white
+                                          : Colors.white.withOpacity(0.3),
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          width: 1,
+                          height: 40,
+                          color: Colors.white.withOpacity(0.3),
+                        ),
+                      ],
+
+                      // Main play/pause button
+                      Expanded(
+                        flex: 3,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: onPlayPause,
+                            borderRadius: BorderRadius.circular(
+                              !isPaused ? 0 : 12,
+                            ),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(vertical: 20),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    isPaused
+                                        ? LucideIcons.play
+                                        : LucideIcons.pause,
+                                    size: 24,
+                                    color: Colors.white,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    isPaused ? 'Resume' : 'Pause',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
                       ),
+
+                      // Next phase button (integrated, right side) - always shown when running
+                      if (!isPaused) ...[
+                        Container(
+                          width: 1,
+                          height: 40,
+                          color: Colors.white.withOpacity(0.3),
+                        ),
+                        Expanded(
+                          flex: 1,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: hasNextPhase ? onNextPhase : null,
+                              borderRadius: BorderRadius.only(
+                                topRight: Radius.circular(12),
+                                bottomRight: Radius.circular(12),
+                              ),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 20),
+                                child: Icon(
+                                  LucideIcons.skipForward,
+                                  color:
+                                      hasNextPhase
+                                          ? Colors.white
+                                          : Colors.white.withOpacity(0.3),
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -122,31 +185,11 @@ class RunControls extends StatelessWidget {
                   ),
                 ),
               ],
-
-              // Next phase button
-              if (hasNextPhase && isPaused) ...[
-                SizedBox(width: 12),
-                Expanded(
-                  flex: 1,
-                  child: ElevatedButton(
-                    onPressed: onNextPhase,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary.withOpacity(0.2),
-                      foregroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: Icon(LucideIcons.skipForward, size: 20),
-                  ),
-                ),
-              ],
             ],
           ),
 
           // Phase navigation hint
-          if (isPaused && (hasNextPhase || hasPreviousPhase)) ...[
+          if (!isPaused) ...[
             SizedBox(height: 12),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -160,7 +203,7 @@ class RunControls extends StatelessWidget {
                   Icon(LucideIcons.info, color: AppColors.info, size: 14),
                   SizedBox(width: 6),
                   Text(
-                    'Use << >> to navigate between phases while paused',
+                    'Use << >> to navigate between phases while running',
                     style: TextStyle(fontSize: 11, color: AppColors.info),
                   ),
                 ],

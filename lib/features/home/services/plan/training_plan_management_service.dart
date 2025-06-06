@@ -1,4 +1,3 @@
-import '../../models/training_plan_model.dart';
 import 'training_plan_core_service.dart';
 import 'training_plan_query_service.dart';
 

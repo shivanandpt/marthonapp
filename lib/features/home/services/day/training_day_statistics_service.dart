@@ -1,12 +1,10 @@
 import '../../models/training_day_model.dart';
-import 'training_day_core_service.dart';
 import 'training_day_query_service.dart';
 
 class TrainingDayStatisticsService {
-  final TrainingDayCoreService _coreService;
   final TrainingDayQueryService _queryService;
 
-  TrainingDayStatisticsService(this._coreService, this._queryService);
+  TrainingDayStatisticsService(this._queryService);
 
   // Get training day statistics for a plan
   Future<Map<String, dynamic>> getTrainingDayStats(String planId) async {
@@ -38,7 +36,7 @@ class TrainingDayStatisticsService {
         if (day.completed && day.completionData.hasCompletionData) {
           final actualDistance = day.completionData.actualDistance;
           final actualDuration = day.completionData.actualDuration;
-          
+
           if (actualDistance != null) {
             totalActualDistance += actualDistance;
           }
@@ -101,7 +99,7 @@ class TrainingDayStatisticsService {
         if (day.completed && day.completionData.hasCompletionData) {
           final actualDistance = day.completionData.actualDistance;
           final actualDuration = day.completionData.actualDuration;
-          
+
           if (actualDistance != null) {
             weeklyActualDistance += actualDistance;
           }
@@ -149,18 +147,18 @@ class TrainingDayStatisticsService {
           };
         }
 
-        weeklyTrends[week]!['completedDays'] = 
+        weeklyTrends[week]!['completedDays'] =
             (weeklyTrends[week]!['completedDays'] as int) + 1;
-            
+
         final actualDistance = day.completionData.actualDistance;
         final actualDuration = day.completionData.actualDuration;
-        
+
         if (actualDistance != null) {
-          weeklyTrends[week]!['totalDistance'] = 
+          weeklyTrends[week]!['totalDistance'] =
               (weeklyTrends[week]!['totalDistance'] as double) + actualDistance;
         }
         if (actualDuration != null) {
-          weeklyTrends[week]!['totalDuration'] = 
+          weeklyTrends[week]!['totalDuration'] =
               (weeklyTrends[week]!['totalDuration'] as int) + actualDuration;
         }
       }
@@ -213,7 +211,7 @@ class TrainingDayStatisticsService {
 
         final stats = sessionStats[sessionType]!;
         stats['total'] = (stats['total'] as int) + 1;
-        
+
         if (day.completed) {
           stats['completed'] = (stats['completed'] as int) + 1;
         }
@@ -224,21 +222,22 @@ class TrainingDayStatisticsService {
           stats['planned'] = (stats['planned'] as int) + 1;
         }
 
-        stats['totalPlannedDistance'] = 
-            (stats['totalPlannedDistance'] as double) + day.targetMetrics.targetDistance;
-        stats['totalPlannedDuration'] = 
+        stats['totalPlannedDistance'] =
+            (stats['totalPlannedDistance'] as double) +
+            day.targetMetrics.targetDistance;
+        stats['totalPlannedDuration'] =
             (stats['totalPlannedDuration'] as int) + day.totals.totalDuration;
 
         if (day.completed && day.completionData.hasCompletionData) {
           final actualDistance = day.completionData.actualDistance;
           final actualDuration = day.completionData.actualDuration;
-          
+
           if (actualDistance != null) {
-            stats['totalActualDistance'] = 
+            stats['totalActualDistance'] =
                 (stats['totalActualDistance'] as double) + actualDistance;
           }
           if (actualDuration != null) {
-            stats['totalActualDuration'] = 
+            stats['totalActualDuration'] =
                 (stats['totalActualDuration'] as int) + actualDuration;
           }
         }
@@ -272,7 +271,7 @@ class TrainingDayStatisticsService {
       for (var day in allDays) {
         // Safe access to dateScheduled
         final scheduledDate = day.scheduling.dateScheduled;
-        
+
         if (scheduledDate.isAfter(now) &&
             scheduledDate.isBefore(now.add(Duration(days: days))) &&
             !day.completed &&
@@ -282,8 +281,10 @@ class TrainingDayStatisticsService {
       }
 
       // Sort by date
-      upcomingDays.sort((a, b) => 
-          a.scheduling.dateScheduled.compareTo(b.scheduling.dateScheduled));
+      upcomingDays.sort(
+        (a, b) =>
+            a.scheduling.dateScheduled.compareTo(b.scheduling.dateScheduled),
+      );
 
       // Group by session type
       Map<String, int> upcomingSessionTypes = {};
@@ -318,20 +319,21 @@ class TrainingDayStatisticsService {
       final startOfToday = DateTime(today.year, today.month, today.day);
 
       // Filter days for today
-      final todaysDays = allDays.where((day) {
-        final scheduledDate = day.scheduling.dateScheduled;
-        final startOfScheduled = DateTime(
-          scheduledDate.year,
-          scheduledDate.month,
-          scheduledDate.day,
-        );
-        return startOfScheduled.isAtSameMomentAs(startOfToday);
-      }).toList();
+      final todaysDays =
+          allDays.where((day) {
+            final scheduledDate = day.scheduling.dateScheduled;
+            final startOfScheduled = DateTime(
+              scheduledDate.year,
+              scheduledDate.month,
+              scheduledDate.day,
+            );
+            return startOfScheduled.isAtSameMomentAs(startOfToday);
+          }).toList();
 
       // Calculate today's metrics
       int completedToday = todaysDays.where((d) => d.completed).length;
       int totalToday = todaysDays.length;
-      double todayCompletionRate = 
+      double todayCompletionRate =
           totalToday > 0 ? (completedToday / totalToday) * 100 : 0;
 
       return {
@@ -351,10 +353,14 @@ class TrainingDayStatisticsService {
   Future<Map<String, dynamic>> getStreakInfo(String planId) async {
     try {
       final allDays = await _queryService.getTrainingDaysForPlan(planId);
-      
+
       // Sort by date
-      final sortedDays = allDays.toList()
-        ..sort((a, b) => a.scheduling.dateScheduled.compareTo(b.scheduling.dateScheduled));
+      final sortedDays =
+          allDays.toList()..sort(
+            (a, b) => a.scheduling.dateScheduled.compareTo(
+              b.scheduling.dateScheduled,
+            ),
+          );
 
       int currentStreak = 0;
       int longestStreak = 0;
@@ -366,25 +372,34 @@ class TrainingDayStatisticsService {
 
       for (var day in sortedDays.reversed) {
         final scheduledDate = day.scheduling.dateScheduled;
-        final dayDate = DateTime(scheduledDate.year, scheduledDate.month, scheduledDate.day);
+        final dayDate = DateTime(
+          scheduledDate.year,
+          scheduledDate.month,
+          scheduledDate.day,
+        );
 
         if (day.completed) {
           tempStreak++;
-          longestStreak = tempStreak > longestStreak ? tempStreak : longestStreak;
-          
+          longestStreak =
+              tempStreak > longestStreak ? tempStreak : longestStreak;
+
           // Calculate current streak (must be consecutive up to today or yesterday)
           if (lastCompletedDate == null) {
             final todayDate = DateTime(today.year, today.month, today.day);
-            final yesterdayDate = DateTime(yesterday.year, yesterday.month, yesterday.day);
-            
-            if (dayDate.isAtSameMomentAs(todayDate) || 
+            final yesterdayDate = DateTime(
+              yesterday.year,
+              yesterday.month,
+              yesterday.day,
+            );
+
+            if (dayDate.isAtSameMomentAs(todayDate) ||
                 dayDate.isAtSameMomentAs(yesterdayDate)) {
               currentStreak = tempStreak;
               lastCompletedDate = dayDate;
             }
           } else {
             // Check if this day is consecutive with the last completed day
-            final expectedDate = lastCompletedDate!.subtract(Duration(days: 1));
+            final expectedDate = lastCompletedDate.subtract(Duration(days: 1));
             if (dayDate.isAtSameMomentAs(expectedDate)) {
               currentStreak = tempStreak;
               lastCompletedDate = dayDate;
@@ -415,20 +430,24 @@ class TrainingDayStatisticsService {
   }
 
   // Get monthly summary
-  Future<Map<String, dynamic>> getMonthlySummary(String planId, DateTime month) async {
+  Future<Map<String, dynamic>> getMonthlySummary(
+    String planId,
+    DateTime month,
+  ) async {
     try {
       final allDays = await _queryService.getTrainingDaysForPlan(planId);
-      
+
       // Filter days for the specific month
-      final monthlyDays = allDays.where((day) {
-        final scheduledDate = day.scheduling.dateScheduled;
-        return scheduledDate.year == month.year && 
-               scheduledDate.month == month.month;
-      }).toList();
+      final monthlyDays =
+          allDays.where((day) {
+            final scheduledDate = day.scheduling.dateScheduled;
+            return scheduledDate.year == month.year &&
+                scheduledDate.month == month.month;
+          }).toList();
 
       int completedThisMonth = monthlyDays.where((d) => d.completed).length;
       int totalThisMonth = monthlyDays.length;
-      double monthlyCompletionRate = 
+      double monthlyCompletionRate =
           totalThisMonth > 0 ? (completedThisMonth / totalThisMonth) * 100 : 0;
 
       // Calculate monthly metrics
@@ -444,7 +463,7 @@ class TrainingDayStatisticsService {
         if (day.completed && day.completionData.hasCompletionData) {
           final actualDistance = day.completionData.actualDistance;
           final actualDuration = day.completionData.actualDuration;
-          
+
           if (actualDistance != null) {
             monthlyActualDistance += actualDistance;
           }

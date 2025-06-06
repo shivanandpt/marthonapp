@@ -10,6 +10,8 @@ import '../no_plan_card.dart';
 import '../../../runs/recent_runs_section/screens/recent_runs_section.dart';
 import '../upcoming_training_section.dart';
 import 'no_runs_card.dart';
+import 'quick_start_menu.dart';
+import 'start_run_fab.dart';
 
 class HomeContent extends StatelessWidget {
   final HomeLoaded state;
@@ -52,6 +54,9 @@ class HomeContent extends StatelessWidget {
               // No Plan Card
               if (state.activePlan == null) const NoPlanCard(),
 
+              // Quick Start Menu Card - Show after no plan or with active plan
+              const QuickStartMenu(),
+
               const SizedBox(height: 24),
 
               // Recent Runs Section - Only show if we have runs
@@ -74,7 +79,8 @@ class HomeContent extends StatelessWidget {
                   todaysTraining: state.todaysTraining,
                 ),
 
-              const SizedBox(height: 80), // For bottom padding
+              // Start Free Run Button at bottom
+              const StartRunFAB(),
             ],
           ),
         ),

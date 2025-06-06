@@ -73,8 +73,7 @@ class TrainingPlanModel {
           .where(
             (day) =>
                 !day.completed &&
-                day.dateScheduled != null &&
-                day.dateScheduled!.isAfter(
+                day.dateScheduled.isAfter(
                   DateTime.now().subtract(const Duration(days: 1)),
                 ),
           )
@@ -84,10 +83,7 @@ class TrainingPlanModel {
     final today = DateTime.now();
     try {
       return trainingDays.firstWhere(
-        (day) =>
-            day.dateScheduled != null &&
-            _isSameDay(day.dateScheduled!, today) &&
-            !day.completed,
+        (day) => _isSameDay(day.dateScheduled, today) && !day.completed,
       );
     } catch (e) {
       return null;
@@ -98,7 +94,7 @@ class TrainingPlanModel {
     final upcoming = upcomingTrainingDays;
     if (upcoming.isEmpty) return null;
 
-    upcoming.sort((a, b) => a.dateScheduled!.compareTo(b.dateScheduled!));
+    upcoming.sort((a, b) => a.dateScheduled.compareTo(b.dateScheduled));
     return upcoming.first;
   }
 
@@ -289,6 +285,26 @@ class TrainingPlanModel {
     return copyWith(
       progress: progress.copyWith(isActive: false),
       dates: dates.copyWith(actualEndDate: DateTime.now()),
+      updatedAt: DateTime.now(),
+    );
+  }
+
+  // Update plan progress - required by management service
+  TrainingPlanModel updateProgress({
+    int? completedSessions,
+    bool? isActive,
+    int? currentWeek,
+    int? currentDay,
+    int? completedWeeks,
+  }) {
+    return copyWith(
+      progress: progress.copyWith(
+        completedSessions: completedSessions,
+        isActive: isActive,
+        currentWeek: currentWeek,
+        currentDay: currentDay,
+        completedWeeks: completedWeeks,
+      ),
       updatedAt: DateTime.now(),
     );
   }

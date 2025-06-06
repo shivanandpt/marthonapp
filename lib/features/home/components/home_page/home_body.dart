@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:marunthon_app/features/home/bloc/home_bloc.dart';
 import 'package:marunthon_app/features/home/bloc/home_state.dart';
-import 'package:marunthon_app/features/home/components/home_page/quick_start_menu.dart';
+import 'home_content.dart';
 import 'loading_view.dart';
 import 'no_user_view.dart';
 import 'error_view.dart';
-import 'home_content.dart';
 
 class HomeBody extends StatelessWidget {
   const HomeBody({super.key});
@@ -36,18 +36,7 @@ class HomeBody extends StatelessWidget {
         }
 
         if (state is HomeLoaded) {
-          return SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 100), // Space for FAB
-            child: Column(
-              children: [
-                // Add QuickStartMenu at the top
-                const QuickStartMenu(),
-
-                // ... your existing home body content
-                // Today's workout, recent runs, stats, etc.
-              ],
-            ),
-          );
+          return HomeContent(state: state);
         }
 
         return const SizedBox.shrink();
