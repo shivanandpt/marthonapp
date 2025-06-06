@@ -13,48 +13,57 @@ class RunDetailPage extends StatelessWidget {
   const RunDetailPage({super.key, required this.run});
 
   List<FlSpot> _prepareSpeedData() {
-    final List<Map<String, dynamic>> points = run.routePoints ?? [];
+    // Properly cast the route points
+    final List<Map<String, dynamic>> points =
+        (run.routePoints as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
 
     if (points.isEmpty) return [];
 
+    // Safe null checking
     final double startTimestamp =
-        points.first['timestamp'] != null
+        points.isNotEmpty && points.first['timestamp'] != null
             ? (points.first['timestamp'] as num).toDouble()
             : 0.0;
 
     Map<int, List<Map<String, dynamic>>> pointsByMinute = {};
-    for (var p in points) {
-      if (p['timestamp'] != null) {
-        final double ts = (p['timestamp'] as num).toDouble();
-        final int minute = ((ts - startTimestamp) / 60000).floor();
-        pointsByMinute.putIfAbsent(minute, () => []).add(p);
+
+    // Group points by minute
+    for (var point in points) {
+      if (point['timestamp'] != null) {
+        final double timestamp = (point['timestamp'] as num).toDouble();
+        final int minute = ((timestamp - startTimestamp) / 60).floor();
+        pointsByMinute.putIfAbsent(minute, () => []).add(point);
       }
     }
 
-    List<FlSpot> speedSpots = [];
-    for (var entry in pointsByMinute.entries) {
-      final int minute = entry.key;
-      final pointsInMinute = entry.value;
+    // Convert to FlSpot list
+    List<FlSpot> speedData = [];
+    pointsByMinute.forEach((minute, pointsInMinute) {
+      if (pointsInMinute.isNotEmpty) {
+        // Calculate average speed for this minute
+        double totalSpeed = 0;
+        int validPoints = 0;
 
-      final avgSpeed =
-          pointsInMinute
-              .where((p) => p['speed'] != null)
-              .map(
-                (p) => (p['speed'] as num).toDouble() * 3.6,
-              ) // Convert to km/h
-              .fold<double>(0.0, (a, b) => a + b) /
-          (pointsInMinute.where((p) => p['speed'] != null).isEmpty
-              ? 1
-              : pointsInMinute.where((p) => p['speed'] != null).length);
+        for (var point in pointsInMinute) {
+          if (point['speed'] != null) {
+            totalSpeed += (point['speed'] as num).toDouble();
+            validPoints++;
+          }
+        }
 
-      speedSpots.add(FlSpot(minute.toDouble(), avgSpeed));
-    }
+        if (validPoints > 0) {
+          final avgSpeed = totalSpeed / validPoints;
+          speedData.add(FlSpot(minute.toDouble(), avgSpeed));
+        }
+      }
+    });
 
-    return speedSpots;
+    return speedData;
   }
 
   List<FlSpot> _prepareElevationData() {
-    final List<Map<String, dynamic>> points = run.routePoints ?? [];
+    final List<Map<String, dynamic>> points =
+        (run.routePoints as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
 
     if (points.isEmpty) return [];
 

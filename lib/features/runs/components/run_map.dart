@@ -114,7 +114,8 @@ class _RunMapState extends State<RunMap> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> points = widget.run.routePoints ?? [];
+    final List<Map<String, dynamic>> points =
+        widget.run.routePoints.cast<Map<String, dynamic>>();
 
     // Filter out invalid points and convert to LatLng
     final List<LatLng> polylinePoints =

@@ -86,7 +86,7 @@ class BasicInfoStep extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
+                  color: Colors.grey[400],
                 ),
               ),
               SizedBox(height: 8),

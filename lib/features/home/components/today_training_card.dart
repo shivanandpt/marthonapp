@@ -12,6 +12,30 @@ class TodayTrainingCard extends StatelessWidget {
   const TodayTrainingCard({Key? key, required this.todaysTraining})
     : super(key: key);
 
+  // Helper method to format duration from phase map
+  String _formatPhaseDuration(Map<String, dynamic> phase) {
+    final duration = phase['duration'];
+    int durationInSeconds = 0;
+
+    if (duration is int) {
+      durationInSeconds = duration;
+    } else if (duration is num) {
+      durationInSeconds = duration.toInt();
+    }
+
+    final hours = durationInSeconds ~/ 3600;
+    final minutes = (durationInSeconds % 3600) ~/ 60;
+    final seconds = durationInSeconds % 60;
+
+    if (hours > 0) {
+      return '${hours}h ${minutes}m';
+    } else if (minutes > 0) {
+      return '${minutes}m';
+    } else {
+      return '${seconds}s';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final formattedDate = DateFormat('EEEE, MMMM d').format(DateTime.now());
@@ -63,19 +87,24 @@ class TodayTrainingCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ...todaysTraining.parsedRunPhases.map((runPhase) {
+                    // Extract phase name and duration from the map
+                    final phaseName =
+                        runPhase['phase'] as String? ?? 'Unknown Phase';
+                    final formattedDuration = _formatPhaseDuration(runPhase);
+
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: Row(
                         children: [
                           Icon(
-                            WorkoutPhaseIcons.getPhaseIcon(runPhase.phase),
+                            WorkoutPhaseIcons.getPhaseIcon(phaseName),
                             color: AppColors.primary,
                             size: 20,
                           ),
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              "${runPhase.formattedDuration} ${runPhase.phase}",
+                              "$formattedDuration $phaseName",
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
