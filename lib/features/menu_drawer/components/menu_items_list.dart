@@ -16,7 +16,6 @@ class MenuItemsList extends StatelessWidget {
   static const List<Map<String, dynamic>> menuItems = [
     {'icon': LucideIcons.home, 'title': 'Home', 'action': 'Home'},
     {'icon': LucideIcons.user, 'title': 'Profile', 'action': 'Profile'},
-    {'icon': LucideIcons.footprints, 'title': 'My Runs', 'action': 'My Runs'},
     {'icon': LucideIcons.settings, 'title': 'Settings', 'action': 'Settings'},
     {'icon': LucideIcons.info, 'title': 'About', 'action': 'About'},
     {'icon': LucideIcons.logOut, 'title': 'Logout', 'action': 'Logout'},
