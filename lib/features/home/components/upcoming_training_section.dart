@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
 import 'package:marunthon_app/features/home/components/training_day_item.dart';
-import 'package:marunthon_app/models/training_day_model.dart';
+import 'package:marunthon_app/features/home/models/training_day_model.dart';
 
 class UpcomingTrainingSection extends StatelessWidget {
   final List<TrainingDayModel> upcomingDays;
