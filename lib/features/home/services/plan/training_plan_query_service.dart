@@ -36,7 +36,7 @@ class TrainingPlanQueryService {
           await _coreService.plansCollection
               .where('userId', isEqualTo: userId)
               .where(
-                'isActive',
+                'progress.isActive',
                 isEqualTo: true,
               ) // Changed from 'progress.isActive'
               .limit(1)
@@ -148,8 +148,9 @@ class TrainingPlanQueryService {
 
       return allPlans.where((plan) {
         if (isActive != null && plan.isActive != isActive) return false;
-        if (isCompleted != null && plan.isCompleted != isCompleted)
+        if (isCompleted != null && plan.isCompleted != isCompleted) {
           return false;
+        }
         if (isOverdue != null && plan.isOverdue != isOverdue) return false;
         return true;
       }).toList();

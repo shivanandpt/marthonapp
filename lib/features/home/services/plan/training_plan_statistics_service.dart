@@ -98,12 +98,14 @@ class TrainingPlanStatisticsService {
         }
         goalTypeStats[goalType]!['total'] =
             goalTypeStats[goalType]!['total']! + 1;
-        if (plan.isCompleted)
+        if (plan.isCompleted) {
           goalTypeStats[goalType]!['completed'] =
               goalTypeStats[goalType]!['completed']! + 1;
-        if (plan.isActive)
+        }
+        if (plan.isActive) {
           goalTypeStats[goalType]!['active'] =
               goalTypeStats[goalType]!['active']! + 1;
+        }
 
         // Difficulty stats
         final difficulty = plan.settings.difficulty;
@@ -116,12 +118,14 @@ class TrainingPlanStatisticsService {
         }
         difficultyStats[difficulty]!['total'] =
             difficultyStats[difficulty]!['total']! + 1;
-        if (plan.isCompleted)
+        if (plan.isCompleted) {
           difficultyStats[difficulty]!['completed'] =
               difficultyStats[difficulty]!['completed']! + 1;
-        if (plan.isActive)
+        }
+        if (plan.isActive) {
           difficultyStats[difficulty]!['active'] =
               difficultyStats[difficulty]!['active']! + 1;
+        }
 
         // Monthly completions
         if (plan.isCompleted && plan.dates.actualEndDate != null) {

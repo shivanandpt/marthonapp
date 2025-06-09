@@ -9,11 +9,11 @@ class TrainingDayOption extends StatelessWidget {
   final UserProfileSetupController controller;
 
   const TrainingDayOption({
-    Key? key,
+    super.key,
     required this.day,
     required this.isSelected,
     required this.controller,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

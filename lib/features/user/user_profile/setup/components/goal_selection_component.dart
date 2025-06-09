@@ -8,11 +8,11 @@ class GoalSelectionComponent extends StatelessWidget {
   final String? customTitle;
 
   const GoalSelectionComponent({
-    Key? key,
+    super.key,
     required this.controller,
     this.showTitle = true,
     this.customTitle,
-  }) : super(key: key);
+  });
 
   static const List<Map<String, dynamic>> runningGoals = [
     {
@@ -163,7 +163,7 @@ class GoalSelectionComponent extends StatelessWidget {
               ),
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }

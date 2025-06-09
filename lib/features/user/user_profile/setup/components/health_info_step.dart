@@ -10,7 +10,7 @@ import 'health_info/skip_step_button.dart';
 class HealthInfoStep extends StatefulWidget {
   final UserProfileSetupController controller;
 
-  const HealthInfoStep({Key? key, required this.controller}) : super(key: key);
+  const HealthInfoStep({super.key, required this.controller});
 
   @override
   State<HealthInfoStep> createState() => _HealthInfoStepState();

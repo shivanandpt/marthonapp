@@ -14,7 +14,7 @@ class AppButton extends StatelessWidget {
   final bool enabled; // Add explicit enabled property
 
   const AppButton({
-    Key? key,
+    super.key,
     required this.text,
     required this.onPressed,
     this.backgroundColor,
@@ -25,7 +25,7 @@ class AppButton extends StatelessWidget {
     this.height = 48, // Default consistent height
     this.isLoading = false,
     this.enabled = true, // Default to enabled
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

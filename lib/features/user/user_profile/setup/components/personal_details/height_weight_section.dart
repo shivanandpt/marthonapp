@@ -7,10 +7,10 @@ class HeightWeightSection extends StatefulWidget {
   final Function(VoidCallback)? onUpdateHintTextsCallback;
 
   const HeightWeightSection({
-    Key? key,
+    super.key,
     required this.controller,
     this.onUpdateHintTextsCallback,
-  }) : super(key: key);
+  });
 
   @override
   State<HeightWeightSection> createState() => _HeightWeightSectionState();

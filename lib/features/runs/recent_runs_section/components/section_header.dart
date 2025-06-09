@@ -9,12 +9,12 @@ class SectionHeader extends StatelessWidget {
   final String actionText;
 
   const SectionHeader({
-    Key? key,
+    super.key,
     required this.title,
     this.actionRoute = '',
     this.onActionTap,
     this.actionText = 'View all',
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

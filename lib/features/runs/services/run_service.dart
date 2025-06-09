@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:marunthon_app/features/runs/models/run_phase_model.dart';
 import '../models/index.dart';
 
 class RunService {

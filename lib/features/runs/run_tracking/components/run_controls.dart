@@ -13,7 +13,7 @@ class RunControls extends StatelessWidget {
   final VoidCallback? onPreviousPhase;
 
   const RunControls({
-    Key? key,
+    super.key,
     required this.status,
     required this.hasNextPhase,
     required this.hasPreviousPhase,
@@ -21,7 +21,7 @@ class RunControls extends StatelessWidget {
     required this.onEnd,
     this.onNextPhase,
     this.onPreviousPhase,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -4,7 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
 
 class NoProfileView extends StatelessWidget {
-  const NoProfileView({Key? key}) : super(key: key);
+  const NoProfileView({super.key});
 
   @override
   Widget build(BuildContext context) {

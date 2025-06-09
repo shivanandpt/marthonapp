@@ -6,7 +6,7 @@ import 'chart_section.dart';
 class ChartsSection extends StatelessWidget {
   final RunChartData chartData;
 
-  const ChartsSection({Key? key, required this.chartData}) : super(key: key);
+  const ChartsSection({super.key, required this.chartData});
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +24,7 @@ class ChartsSection extends StatelessWidget {
             ),
           ),
         ),
-        
+
         // Speed Chart
         ChartSection(
           title: "Speed Over Time",

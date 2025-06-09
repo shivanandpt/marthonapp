@@ -8,8 +8,7 @@ class RunCard extends StatelessWidget {
   final RunModel run;
   final VoidCallback onTap;
 
-  const RunCard({Key? key, required this.run, required this.onTap})
-    : super(key: key);
+  const RunCard({super.key, required this.run, required this.onTap});
 
   @override
   Widget build(BuildContext context) {

@@ -10,8 +10,7 @@ import 'personal_details/height_weight_section.dart';
 class PersonalDetailsStep extends StatefulWidget {
   final UserProfileSetupController controller;
 
-  const PersonalDetailsStep({Key? key, required this.controller})
-    : super(key: key);
+  const PersonalDetailsStep({super.key, required this.controller});
 
   @override
   State<PersonalDetailsStep> createState() => _PersonalDetailsStepState();

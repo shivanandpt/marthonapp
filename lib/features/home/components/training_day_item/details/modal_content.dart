@@ -8,7 +8,7 @@ import 'completion_data.dart';
 class ModalContent extends StatelessWidget {
   final TrainingDayModel day;
 
-  const ModalContent({Key? key, required this.day}) : super(key: key);
+  const ModalContent({super.key, required this.day});
 
   @override
   Widget build(BuildContext context) {

@@ -29,6 +29,7 @@ class HomeLoaded extends HomeState {
   final TrainingPlanModel? activePlan;
   final List<RunModel> recentRuns;
   final List<RunModel> allRuns; // Add this line for all runs
+  final List<TrainingDayModel> allTrainingDays; // Add all training days
   final List<TrainingDayModel> upcomingTrainingDays;
   final TrainingDayModel? todaysTraining;
   final int daysCompleted;
@@ -41,6 +42,7 @@ class HomeLoaded extends HomeState {
     this.activePlan,
     required this.recentRuns,
     required this.allRuns, // Add this parameter
+    required this.allTrainingDays, // Add all training days parameter
     required this.upcomingTrainingDays,
     this.todaysTraining,
     required this.daysCompleted,
@@ -55,6 +57,7 @@ class HomeLoaded extends HomeState {
     activePlan,
     recentRuns,
     allRuns, // Add to props
+    allTrainingDays, // Add all training days to props
     upcomingTrainingDays,
     todaysTraining,
     daysCompleted,
@@ -69,6 +72,7 @@ class HomeLoaded extends HomeState {
     TrainingPlanModel? activePlan,
     List<RunModel>? recentRuns,
     List<RunModel>? allRuns,
+    List<TrainingDayModel>? allTrainingDays,
     List<TrainingDayModel>? upcomingTrainingDays,
     TrainingDayModel? todaysTraining,
     int? daysCompleted,
@@ -81,6 +85,7 @@ class HomeLoaded extends HomeState {
       activePlan: activePlan ?? this.activePlan,
       recentRuns: recentRuns ?? this.recentRuns,
       allRuns: allRuns ?? this.allRuns,
+      allTrainingDays: allTrainingDays ?? this.allTrainingDays,
       upcomingTrainingDays: upcomingTrainingDays ?? this.upcomingTrainingDays,
       todaysTraining: todaysTraining ?? this.todaysTraining,
       daysCompleted: daysCompleted ?? this.daysCompleted,

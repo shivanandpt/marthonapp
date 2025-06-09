@@ -6,7 +6,7 @@ import '../../controllers/user_profile_setup_controller.dart';
 class GenderSelector extends StatelessWidget {
   final UserProfileSetupController controller;
 
-  const GenderSelector({Key? key, required this.controller}) : super(key: key);
+  const GenderSelector({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {

@@ -8,7 +8,7 @@ import '../health_info_step.dart';
 class StepContent extends StatelessWidget {
   final UserProfileSetupController controller;
 
-  const StepContent({Key? key, required this.controller}) : super(key: key);
+  const StepContent({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {

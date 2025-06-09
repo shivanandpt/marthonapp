@@ -14,11 +14,11 @@ class TrainingDayCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const TrainingDayCard({
-    Key? key,
+    super.key,
     required this.day,
     required this.isToday,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

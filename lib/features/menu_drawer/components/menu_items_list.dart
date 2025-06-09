@@ -8,10 +8,10 @@ class MenuItemsList extends StatelessWidget {
   final Function(String) onMenuItemTapped;
 
   const MenuItemsList({
-    Key? key,
+    super.key,
     required this.state,
     required this.onMenuItemTapped,
-  }) : super(key: key);
+  });
 
   static const List<Map<String, dynamic>> menuItems = [
     {'icon': LucideIcons.home, 'title': 'Home', 'action': 'Home'},
@@ -32,7 +32,7 @@ class MenuItemsList extends StatelessWidget {
             return MenuItemTile(
               item: item,
               isLoading: isLoading,
-              isEnabled: !(state is LogoutLoading),
+              isEnabled: state is! LogoutLoading,
               onTap: () => onMenuItemTapped(item['title']),
             );
           }).toList(),

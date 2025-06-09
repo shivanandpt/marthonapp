@@ -8,8 +8,7 @@ import 'profile_info_tile.dart';
 class SubscriptionInfoSection extends StatelessWidget {
   final UserModel user;
 
-  const SubscriptionInfoSection({Key? key, required this.user})
-    : super(key: key);
+  const SubscriptionInfoSection({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {

@@ -11,14 +11,14 @@ class ChartSection extends StatelessWidget {
   final String? unit;
 
   const ChartSection({
-    Key? key,
+    super.key,
     required this.title,
     required this.data,
     required this.color,
     required this.yAxisLabel,
     this.showArea = false,
     this.unit,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -8,7 +8,7 @@ import 'metric_item.dart';
 class CompletionData extends StatelessWidget {
   final TrainingDayModel day;
 
-  const CompletionData({Key? key, required this.day}) : super(key: key);
+  const CompletionData({super.key, required this.day});
 
   @override
   Widget build(BuildContext context) {

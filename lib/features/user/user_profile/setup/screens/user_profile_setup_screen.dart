@@ -11,8 +11,7 @@ import '../components/setup_screen/navigation_buttons.dart';
 class UserProfileSetupScreen extends StatefulWidget {
   final bool isEditMode;
 
-  const UserProfileSetupScreen({Key? key, this.isEditMode = false})
-    : super(key: key);
+  const UserProfileSetupScreen({super.key, this.isEditMode = false});
 
   @override
   _UserProfileSetupScreenState createState() => _UserProfileSetupScreenState();

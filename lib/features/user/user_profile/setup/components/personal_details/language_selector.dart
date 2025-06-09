@@ -6,8 +6,7 @@ import '../../controllers/user_profile_setup_controller.dart';
 class LanguageSelector extends StatelessWidget {
   final UserProfileSetupController controller;
 
-  const LanguageSelector({Key? key, required this.controller})
-    : super(key: key);
+  const LanguageSelector({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {

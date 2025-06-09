@@ -7,11 +7,11 @@ class SetupStepIndicator extends StatelessWidget {
   final List<String> stepTitles;
 
   const SetupStepIndicator({
-    Key? key,
+    super.key,
     required this.currentStep,
     required this.totalSteps,
     this.stepTitles = const [],
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

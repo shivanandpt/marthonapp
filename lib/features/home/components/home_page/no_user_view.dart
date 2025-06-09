@@ -4,7 +4,7 @@ import 'package:marunthon_app/core/widgets/app_button.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
 
 class NoUserView extends StatelessWidget {
-  const NoUserView({Key? key}) : super(key: key);
+  const NoUserView({super.key});
 
   @override
   Widget build(BuildContext context) {

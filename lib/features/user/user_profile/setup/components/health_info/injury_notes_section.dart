@@ -7,10 +7,10 @@ class InjuryNotesSection extends StatefulWidget {
   final Function(VoidCallback)? onClearCallback;
 
   const InjuryNotesSection({
-    Key? key,
+    super.key,
     required this.controller,
     this.onClearCallback,
-  }) : super(key: key);
+  });
 
   @override
   State<InjuryNotesSection> createState() => _InjuryNotesSectionState();

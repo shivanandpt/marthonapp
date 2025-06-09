@@ -7,10 +7,10 @@ class MetricSystemToggle extends StatelessWidget {
   final VoidCallback? onMetricSystemChanged;
 
   const MetricSystemToggle({
-    Key? key,
+    super.key,
     required this.controller,
     this.onMetricSystemChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

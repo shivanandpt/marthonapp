@@ -8,7 +8,7 @@ import 'profile_info_tile.dart';
 class BasicInfoSection extends StatelessWidget {
   final UserModel user;
 
-  const BasicInfoSection({Key? key, required this.user}) : super(key: key);
+  const BasicInfoSection({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {

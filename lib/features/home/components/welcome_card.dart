@@ -7,7 +7,7 @@ import 'package:marunthon_app/features/user/user_profile/setup/models/user_model
 class WelcomeCard extends StatelessWidget {
   final UserModel userModel;
 
-  const WelcomeCard({Key? key, required this.userModel}) : super(key: key);
+  const WelcomeCard({super.key, required this.userModel});
 
   @override
   Widget build(BuildContext context) {

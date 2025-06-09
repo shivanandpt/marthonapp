@@ -8,11 +8,11 @@ class RunCardsList extends StatelessWidget {
   final int maxItems;
 
   const RunCardsList({
-    Key? key,
+    super.key,
     required this.runs,
     required this.onRunTap,
     this.maxItems = 5,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

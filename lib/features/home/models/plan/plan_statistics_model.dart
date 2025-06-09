@@ -27,7 +27,53 @@ class PlanStatisticsModel {
     };
   }
 
-  // Helper getters
+  // Helper getters with metric system support
+  String formattedTotalDistanceForMetric(String metricSystem) {
+    if (metricSystem == 'imperial') {
+      final miles = totalPlannedDistance * 0.000621371;
+      if (miles >= 1.0) {
+        return '${miles.toStringAsFixed(1)} mi';
+      } else {
+        final feet = totalPlannedDistance * 3.28084;
+        return '${feet.toStringAsFixed(0)} ft';
+      }
+    } else {
+      if (totalPlannedDistance >= 1000) {
+        return '${(totalPlannedDistance / 1000).toStringAsFixed(1)} km';
+      } else {
+        return '${totalPlannedDistance.toStringAsFixed(0)} m';
+      }
+    }
+  }
+
+  String formattedTotalDurationWithOptions({bool showSeconds = false}) {
+    final hours = totalPlannedDuration ~/ 3600;
+    final minutes = (totalPlannedDuration % 3600) ~/ 60;
+    final seconds = totalPlannedDuration % 60;
+
+    if (hours > 0) {
+      return showSeconds
+          ? '${hours}h ${minutes}m ${seconds}s'
+          : '${hours}h ${minutes}m';
+    } else if (minutes > 0) {
+      return showSeconds ? '${minutes}m ${seconds}s' : '${minutes}m';
+    } else {
+      return '${seconds}s';
+    }
+  }
+
+  String formattedAverageSessionDurationWithOptions({bool showSeconds = true}) {
+    final minutes = averageSessionDuration ~/ 60;
+    final seconds = averageSessionDuration % 60;
+
+    if (minutes > 0) {
+      return showSeconds ? '${minutes}m ${seconds}s' : '${minutes}m';
+    } else {
+      return '${seconds}s';
+    }
+  }
+
+  // Legacy getters (backwards compatibility)
   String get formattedTotalDistance {
     if (totalPlannedDistance >= 1000) {
       return '${(totalPlannedDistance / 1000).toStringAsFixed(1)} km';
