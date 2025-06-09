@@ -6,8 +6,7 @@ import '../../controllers/user_profile_setup_controller.dart';
 class TrainingDaysSelector extends StatelessWidget {
   final UserProfileSetupController controller;
 
-  const TrainingDaysSelector({Key? key, required this.controller})
-    : super(key: key);
+  const TrainingDaysSelector({super.key, required this.controller});
 
   static const List<Map<String, dynamic>> trainingDays = [
     {

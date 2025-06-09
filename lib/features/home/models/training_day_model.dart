@@ -9,8 +9,7 @@ import 'days/day_target_metrics_model.dart';
 import 'days/day_completion_data_model.dart';
 
 class TrainingDayModel {
-  final String id;
-  final String planId;
+  final String? id; // Make id optional since Firebase assigns it
 
   // Day Identification
   final DayIdentificationModel identification;
@@ -41,8 +40,7 @@ class TrainingDayModel {
   final DateTime updatedAt;
 
   TrainingDayModel({
-    required this.id,
-    required this.planId,
+    this.id, // Remove required since Firebase assigns it
     required this.identification,
     required this.scheduling,
     required this.configuration,
@@ -128,8 +126,7 @@ class TrainingDayModel {
     final totals = DayTotalsModel.fromPhases(phasesList);
 
     return TrainingDayModel(
-      id: id,
-      planId: data['planId'] ?? '',
+      id: id, // Firebase provides the id
       identification: DayIdentificationModel.fromMap(
         data['identification'] ?? data,
       ),
@@ -170,8 +167,7 @@ class TrainingDayModel {
             : DayTotalsModel.fromPhases(phasesList);
 
     return TrainingDayModel(
-      id: data['id'] ?? '',
-      planId: data['planId'] ?? '',
+      id: data['id'], // May be null for new training days
       identification: DayIdentificationModel.fromMap(
         data['identification'] ?? data,
       ),
@@ -203,11 +199,9 @@ class TrainingDayModel {
     );
   }
 
-  // Convert TrainingDayModel to Map
+  // Convert TrainingDayModel to Map (for local use, includes id if available)
   Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'planId': planId,
+    final map = {
       'identification': identification.toMap(),
       'scheduling': scheduling.toMap(),
       'configuration': configuration.toMap(),
@@ -219,12 +213,18 @@ class TrainingDayModel {
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
+
+    // Only include id if it exists
+    if (id != null) {
+      map['id'] = id!;
+    }
+
+    return map;
   }
 
-  // Convert TrainingDayModel to Firestore document
+  // Convert TrainingDayModel to Firestore document (excludes id since Firebase assigns it)
   Map<String, dynamic> toFirestore() {
     return {
-      'planId': planId,
       'identification': identification.toMap(),
       'scheduling': scheduling.toMap(),
       'configuration': configuration.toMap(),
@@ -281,7 +281,6 @@ class TrainingDayModel {
 
   TrainingDayModel copyWith({
     String? id,
-    String? planId,
     DayIdentificationModel? identification,
     DaySchedulingModel? scheduling,
     DayConfigurationModel? configuration,
@@ -295,7 +294,6 @@ class TrainingDayModel {
   }) {
     return TrainingDayModel(
       id: id ?? this.id,
-      planId: planId ?? this.planId,
       identification: identification ?? this.identification,
       scheduling: scheduling ?? this.scheduling,
       configuration: configuration ?? this.configuration,

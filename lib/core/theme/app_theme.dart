@@ -10,20 +10,18 @@ class AppTheme {
 
       // Color Scheme
       colorScheme: const ColorScheme.dark(
-        background: AppColors.background,
         surface: AppColors.cardBg,
         primary: AppColors.primary,
         secondary: AppColors.secondary,
         tertiary: AppColors.accent,
         error: AppColors.error,
-        onBackground: AppColors.textPrimary,
         onSurface: AppColors.textPrimary,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
         onTertiary: Colors.black,
         onError: Colors.white,
         outline: AppColors.disabled,
-        surfaceVariant: AppColors.progressBg,
+        surfaceContainerHighest: AppColors.progressBg,
         onSurfaceVariant: AppColors.textSecondary,
       ),
 
@@ -295,14 +293,14 @@ class AppTheme {
 
       // Switch Theme
       switchTheme: SwitchThemeData(
-        thumbColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
             return Colors.white;
           }
           return AppColors.textSecondary;
         }),
-        trackColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
             return AppColors.primary;
           }
           return AppColors.disabled;

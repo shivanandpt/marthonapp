@@ -8,12 +8,12 @@ class StatItem extends StatelessWidget {
   final Color color;
 
   const StatItem({
-    Key? key,
+    super.key,
     required this.icon,
     required this.label,
     required this.value,
     required this.color,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

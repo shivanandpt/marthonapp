@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class LogoutLoadingOverlay extends StatelessWidget {
-  const LogoutLoadingOverlay({Key? key}) : super(key: key);
+  const LogoutLoadingOverlay({super.key});
 
   @override
   Widget build(BuildContext context) {

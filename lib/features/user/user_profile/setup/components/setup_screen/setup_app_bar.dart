@@ -6,7 +6,7 @@ import '../../controllers/user_profile_setup_controller.dart';
 class SetupAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool isEditMode;
 
-  const SetupAppBar({Key? key, required this.isEditMode}) : super(key: key);
+  const SetupAppBar({super.key, required this.isEditMode});
 
   @override
   Widget build(BuildContext context) {

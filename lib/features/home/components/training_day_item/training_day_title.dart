@@ -6,7 +6,7 @@ import 'training_day_badges.dart';
 class TrainingDayTitle extends StatelessWidget {
   final TrainingDayModel day;
 
-  const TrainingDayTitle({Key? key, required this.day}) : super(key: key);
+  const TrainingDayTitle({super.key, required this.day});
 
   @override
   Widget build(BuildContext context) {

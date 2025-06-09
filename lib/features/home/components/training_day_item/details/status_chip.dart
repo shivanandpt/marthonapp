@@ -5,7 +5,7 @@ import 'package:marunthon_app/features/home/models/training_day_model.dart';
 class StatusChip extends StatelessWidget {
   final TrainingDayModel day;
 
-  const StatusChip({Key? key, required this.day}) : super(key: key);
+  const StatusChip({super.key, required this.day});
 
   @override
   Widget build(BuildContext context) {

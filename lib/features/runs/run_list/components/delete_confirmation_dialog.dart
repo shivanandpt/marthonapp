@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
 
 class DeleteConfirmationDialog extends StatelessWidget {
-  const DeleteConfirmationDialog({Key? key}) : super(key: key);
+  const DeleteConfirmationDialog({super.key});
 
   @override
   Widget build(BuildContext context) {

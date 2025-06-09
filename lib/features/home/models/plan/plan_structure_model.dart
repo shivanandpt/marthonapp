@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class PlanStructureModel {
   final int weeks;
   final int runDaysPerWeek;

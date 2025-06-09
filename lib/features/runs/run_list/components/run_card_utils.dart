@@ -20,6 +20,6 @@ class RunCardUtils {
     int minutes = paceMinutesPerKm.floor();
     int seconds = ((paceMinutesPerKm - minutes) * 60).round();
 
-    return "${minutes}:${seconds.toString().padLeft(2, '0')}";
+    return "$minutes:${seconds.toString().padLeft(2, '0')}";
   }
 }

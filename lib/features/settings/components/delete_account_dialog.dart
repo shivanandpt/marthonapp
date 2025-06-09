@@ -3,7 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
 
 class DeleteAccountDialog extends StatefulWidget {
-  const DeleteAccountDialog({Key? key}) : super(key: key);
+  const DeleteAccountDialog({super.key});
 
   @override
   State<DeleteAccountDialog> createState() => _DeleteAccountDialogState();

@@ -8,10 +8,10 @@ class UpcomingTrainingSection extends StatelessWidget {
   final TrainingDayModel? todaysTraining;
 
   const UpcomingTrainingSection({
-    Key? key,
+    super.key,
     required this.upcomingDays,
     this.todaysTraining,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -31,11 +31,11 @@ class UpcomingTrainingSection extends StatelessWidget {
         ),
         ...List.generate(upcomingDays.length, (index) {
           final day = upcomingDays[index];
-          if (day.dateScheduled == null) return SizedBox.shrink();
 
           // Skip today's training if we already showed it
-          if (todaysTraining != null && day.id == todaysTraining!.id)
+          if (todaysTraining != null && day.id == todaysTraining!.id) {
             return SizedBox.shrink();
+          }
 
           return TrainingDayItem(day: day);
         }),

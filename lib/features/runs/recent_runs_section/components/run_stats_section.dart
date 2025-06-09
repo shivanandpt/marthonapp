@@ -7,7 +7,7 @@ import 'stat_item.dart';
 class RunStatsSection extends StatelessWidget {
   final RunModel run;
 
-  const RunStatsSection({Key? key, required this.run}) : super(key: key);
+  const RunStatsSection({super.key, required this.run});
 
   @override
   Widget build(BuildContext context) {
@@ -101,6 +101,6 @@ class RunStatsSection extends StatelessWidget {
     final int minutes = (paceSecondsPerKm / 60).floor();
     final int seconds = (paceSecondsPerKm % 60).round();
 
-    return "${minutes}:${seconds.toString().padLeft(2, '0')}";
+    return "$minutes:${seconds.toString().padLeft(2, '0')}";
   }
 }

@@ -10,11 +10,11 @@ class DrawerContent extends StatelessWidget {
   final Function(String) onMenuItemTapped;
 
   const DrawerContent({
-    Key? key,
+    super.key,
     required this.userName,
     required this.state,
     required this.onMenuItemTapped,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -7,8 +7,7 @@ class TrainingDayIcon extends StatelessWidget {
   final TrainingDayModel day;
   final bool isToday;
 
-  const TrainingDayIcon({Key? key, required this.day, required this.isToday})
-    : super(key: key);
+  const TrainingDayIcon({super.key, required this.day, required this.isToday});
 
   @override
   Widget build(BuildContext context) {

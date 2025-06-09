@@ -4,8 +4,7 @@ import 'package:marunthon_app/core/theme/app_colors.dart';
 class DrawerHeaderSection extends StatelessWidget {
   final String userName;
 
-  const DrawerHeaderSection({Key? key, required this.userName})
-    : super(key: key);
+  const DrawerHeaderSection({super.key, required this.userName});
 
   @override
   Widget build(BuildContext context) {

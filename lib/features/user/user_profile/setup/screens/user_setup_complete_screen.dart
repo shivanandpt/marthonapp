@@ -7,10 +7,10 @@ class UserSetupCompleteScreen extends StatelessWidget {
   final VoidCallback onContinue;
 
   const UserSetupCompleteScreen({
-    Key? key,
+    super.key,
     required this.userName,
     required this.onContinue,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

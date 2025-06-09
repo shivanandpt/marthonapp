@@ -7,7 +7,7 @@ import 'status_chip.dart';
 class ModalHeader extends StatelessWidget {
   final TrainingDayModel day;
 
-  const ModalHeader({Key? key, required this.day}) : super(key: key);
+  const ModalHeader({super.key, required this.day});
 
   @override
   Widget build(BuildContext context) {

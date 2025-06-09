@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class NoRunsCard extends StatelessWidget {
-  const NoRunsCard({Key? key}) : super(key: key);
+  const NoRunsCard({super.key});
 
   @override
   Widget build(BuildContext context) {

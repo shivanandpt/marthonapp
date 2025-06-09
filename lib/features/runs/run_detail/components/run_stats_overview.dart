@@ -7,7 +7,7 @@ import '../../models/route_point_model.dart';
 class RunStatsOverview extends StatelessWidget {
   final RunModel run;
 
-  const RunStatsOverview({Key? key, required this.run}) : super(key: key);
+  const RunStatsOverview({super.key, required this.run});
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +94,7 @@ class RunStatsOverview extends StatelessWidget {
               _buildSecondaryStat(
                 icon: LucideIcons.flame,
                 label: "Calories",
-                value: "${run.calories.toStringAsFixed(0)}",
+                value: run.calories.toStringAsFixed(0),
                 color: AppColors.error,
               ),
               _buildSecondaryStat(
@@ -113,18 +113,7 @@ class RunStatsOverview extends StatelessWidget {
   double _calculateAverageAccuracy() {
     List<RoutePointModel> points = [];
 
-    if (run.routePoints is List<RoutePointModel>) {
-      points = run.routePoints as List<RoutePointModel>;
-    } else if (run.routePoints is List<dynamic>) {
-      points =
-          (run.routePoints as List<dynamic>)
-              .where((point) => point is Map<String, dynamic>)
-              .map(
-                (point) =>
-                    RoutePointModel.fromMap(point as Map<String, dynamic>),
-              )
-              .toList();
-    }
+    points = run.routePoints as List<RoutePointModel>;
 
     if (points.isEmpty) return 0.0;
 
@@ -245,6 +234,6 @@ class RunStatsOverview extends StatelessWidget {
     final int minutes = (paceSecondsPerKm / 60).floor();
     final int seconds = (paceSecondsPerKm % 60).round();
 
-    return "${minutes}:${seconds.toString().padLeft(2, '0')}/km";
+    return "$minutes:${seconds.toString().padLeft(2, '0')}/km";
   }
 }

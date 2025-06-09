@@ -8,6 +8,7 @@ import 'package:marunthon_app/features/user/user_profile/setup/screens/user_setu
 import 'package:marunthon_app/features/user/user_profile/presentation/user_profile_screen.dart';
 import 'package:marunthon_app/features/runs/models/run_model.dart';
 import 'package:marunthon_app/features/settings/screens/settings_screen.dart';
+import 'package:marunthon_app/features/home/presentation/screens/plan_creation_screen.dart';
 
 class AppRoutes {
   final GoRouter router = GoRouter(
@@ -48,6 +49,10 @@ class AppRoutes {
           final run = state.extra as RunModel;
           return RunDetailPage(run: run);
         },
+      ),
+      GoRoute(
+        path: '/create-plan',
+        builder: (context, state) => const PlanCreationScreen(),
       ),
     ],
     redirect: (context, state) {

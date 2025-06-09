@@ -8,7 +8,7 @@ import '../../bloc/home_event.dart';
 class ErrorView extends StatelessWidget {
   final String errorMessage;
 
-  const ErrorView({Key? key, required this.errorMessage}) : super(key: key);
+  const ErrorView({super.key, required this.errorMessage});
 
   @override
   Widget build(BuildContext context) {

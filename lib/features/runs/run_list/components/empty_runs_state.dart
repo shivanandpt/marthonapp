@@ -3,7 +3,7 @@ import 'package:marunthon_app/core/theme/app_colors.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class EmptyRunsState extends StatelessWidget {
-  const EmptyRunsState({Key? key}) : super(key: key);
+  const EmptyRunsState({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -8,7 +8,6 @@ import 'package:marunthon_app/features/runs/services/run_service.dart';
 import 'package:marunthon_app/features/runs/models/run_model.dart';
 import 'package:marunthon_app/features/home/models/training_day_model.dart';
 import 'package:marunthon_app/features/home/models/training_plan_model.dart';
-import 'package:marunthon_app/features/user/user_profile/setup/models/user_model.dart';
 
 import 'home_event.dart';
 import 'home_state.dart';
@@ -115,6 +114,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           userModel: userModel,
           activePlan: activePlan,
           allRuns: allRuns,
+          allTrainingDays: trainingData.allTrainingDays,
           recentRuns: recentRuns, // Only for display
           upcomingTrainingDays: trainingData.upcomingDays,
           todaysTraining: trainingData.todaysTraining,
@@ -139,6 +139,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       if (activePlan == null) {
         print('No active training plan found');
         return _TrainingData(
+          allTrainingDays: [],
           upcomingDays: [],
           todaysTraining: null,
           daysCompleted: 0,
@@ -152,7 +153,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
       // Get all training days for plan
       final allTrainingDays = await _trainingDayService.getTrainingDaysForPlan(
-        activePlan.id,
+        activePlan
+            .id!, // Force unwrap since we know activePlan is not null here
       );
       final totalDays = allTrainingDays.length;
       final totalWeeks = activePlan.weeks;
@@ -164,7 +166,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       final allTrainingDayIds =
           allTrainingDays
               .map((day) => day.id)
-              .where((id) => id.isNotEmpty)
+              .where((id) => id!.isNotEmpty)
               .toSet();
 
       print('All training day IDs in plan: $allTrainingDayIds');
@@ -229,35 +231,37 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
       // Find today's training and upcoming days
       for (var day in allTrainingDays) {
-        if (day.dateScheduled != null) {
-          final dayDate = DateTime(
-            day.dateScheduled!.year,
-            day.dateScheduled!.month,
-            day.dateScheduled!.day,
+        final dayDate = DateTime(
+          day.scheduling.dateScheduled.year,
+          day.scheduling.dateScheduled.month,
+          day.scheduling.dateScheduled.day,
+        );
+
+        // Check if it's today's training
+        if (dayDate.isAtSameMomentAs(todayDate)) {
+          todaysTraining = day;
+          print(
+            'Found today\'s training: ${day.identification.sessionType} on ${dayDate}',
           );
+        }
 
-          // Check if it's today's training
-          if (dayDate.isAtSameMomentAs(todayDate)) {
-            todaysTraining = day;
-            print('Found today\'s training: ${day.id}');
-          }
-
-          // Add to upcoming days (next 7 days including today)
-          // Only include days that haven't been completed yet
-          final difference = dayDate.difference(todayDate).inDays;
-          if (difference >= 0 &&
-              difference <= 7 &&
-              upcomingDays.length < 7 &&
-              !completedTrainingDayIds.contains(day.id)) {
-            upcomingDays.add(day);
-          }
+        // Add to upcoming days (next 7 days including today)
+        // Only include days that haven't been completed yet
+        final difference = dayDate.difference(todayDate).inDays;
+        if (difference >= 0 &&
+            difference <= 7 &&
+            upcomingDays.length < 7 &&
+            !completedTrainingDayIds.contains(day.id)) {
+          upcomingDays.add(day);
+          print(
+            'Added upcoming day: ${day.identification.sessionType} on ${dayDate} (${difference} days from today)',
+          );
         }
       }
 
       // Sort upcoming days by date
       upcomingDays.sort((a, b) {
-        if (a.dateScheduled == null || b.dateScheduled == null) return 0;
-        return a.dateScheduled!.compareTo(b.dateScheduled!);
+        return a.scheduling.dateScheduled.compareTo(b.scheduling.dateScheduled);
       });
 
       // Calculate current week
@@ -270,21 +274,22 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         DateTime? latestCompletedDate;
 
         for (var day in allTrainingDays) {
-          if (completedTrainingDayIds.contains(day.id) &&
-              day.dateScheduled != null) {
+          if (completedTrainingDayIds.contains(day.id)) {
             if (latestCompletedDate == null ||
-                day.dateScheduled!.isAfter(latestCompletedDate)) {
-              latestCompletedDate = day.dateScheduled;
+                day.scheduling.dateScheduled.isAfter(latestCompletedDate)) {
+              latestCompletedDate = day.scheduling.dateScheduled;
               latestCompletedDay = day;
             }
           }
         }
 
         if (latestCompletedDay != null) {
-          currentWeek = latestCompletedDay.week;
+          currentWeek = latestCompletedDay.identification.week;
           // If all days in current week are completed, move to next week
           final currentWeekDays =
-              allTrainingDays.where((day) => day.week == currentWeek).toList();
+              allTrainingDays
+                  .where((day) => day.identification.week == currentWeek)
+                  .toList();
           final completedCurrentWeekDays =
               currentWeekDays
                   .where((day) => completedTrainingDayIds.contains(day.id))
@@ -305,6 +310,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       print('Upcoming training days: ${upcomingDays.length}');
 
       return _TrainingData(
+        allTrainingDays: allTrainingDays,
         upcomingDays: upcomingDays,
         todaysTraining: todaysTraining,
         daysCompleted: daysCompleted,
@@ -316,6 +322,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       print('Error calculating training data: $e');
       // Return safe defaults
       return _TrainingData(
+        allTrainingDays: [],
         upcomingDays: [],
         todaysTraining: null,
         daysCompleted: 0,
@@ -328,6 +335,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 }
 
 class _TrainingData {
+  final List<TrainingDayModel> allTrainingDays;
   final List<TrainingDayModel> upcomingDays;
   final TrainingDayModel? todaysTraining;
   final int daysCompleted;
@@ -336,6 +344,7 @@ class _TrainingData {
   final int totalWeeks;
 
   _TrainingData({
+    required this.allTrainingDays,
     required this.upcomingDays,
     this.todaysTraining,
     required this.daysCompleted,

@@ -7,7 +7,7 @@ import 'package:marunthon_app/features/runs/models/run_model.dart';
 class RunCardHeader extends StatelessWidget {
   final RunModel run;
 
-  const RunCardHeader({Key? key, required this.run}) : super(key: key);
+  const RunCardHeader({super.key, required this.run});
 
   @override
   Widget build(BuildContext context) {

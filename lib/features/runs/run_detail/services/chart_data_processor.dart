@@ -6,7 +6,7 @@ import '../models/chart_data.dart';
 class ChartDataProcessor {
   static RunChartData processRunData(RunModel run) {
     final points = _extractRoutePoints(run);
-    
+
     return RunChartData(
       speedData: _prepareSpeedData(points),
       elevationData: _prepareElevationData(points),
@@ -18,15 +18,7 @@ class ChartDataProcessor {
 
   static List<RoutePointModel> _extractRoutePoints(RunModel run) {
     // Handle both List<RoutePointModel> and List<dynamic> cases
-    if (run.routePoints is List<RoutePointModel>) {
-      return run.routePoints as List<RoutePointModel>;
-    } else if (run.routePoints is List<dynamic>) {
-      // Convert dynamic list to RoutePointModel list
-      return (run.routePoints as List<dynamic>)
-          .where((point) => point is Map<String, dynamic>)
-          .map((point) => RoutePointModel.fromMap(point as Map<String, dynamic>))
-          .toList();
-    }
+    return run.routePoints as List<RoutePointModel>;
     return [];
   }
 
@@ -101,7 +93,8 @@ class ChartDataProcessor {
     Map<int, List<RoutePointModel>> pointsByMinute = {};
 
     for (var point in points) {
-      final double timestamp = point.timestamp.millisecondsSinceEpoch.toDouble();
+      final double timestamp =
+          point.timestamp.millisecondsSinceEpoch.toDouble();
       final int minute = ((timestamp - startTimestamp) / 60000).floor();
       pointsByMinute.putIfAbsent(minute, () => []).add(point);
     }
@@ -109,11 +102,12 @@ class ChartDataProcessor {
     return pointsByMinute;
   }
 
-  static FlSpot? _calculateAverageSpeed(int minute, List<RoutePointModel> points) {
-    final validSpeeds = points
-        .where((p) => p.speed > 0)
-        .map((p) => p.speed)
-        .toList();
+  static FlSpot? _calculateAverageSpeed(
+    int minute,
+    List<RoutePointModel> points,
+  ) {
+    final validSpeeds =
+        points.where((p) => p.speed > 0).map((p) => p.speed).toList();
 
     if (validSpeeds.isEmpty) return null;
 
@@ -121,22 +115,25 @@ class ChartDataProcessor {
     return FlSpot(minute.toDouble(), avgSpeed * 3.6); // Convert m/s to km/h
   }
 
-  static FlSpot? _calculateAverageElevation(int minute, List<RoutePointModel> points) {
-    final validElevations = points
-        .map((p) => p.elevation)
-        .toList();
+  static FlSpot? _calculateAverageElevation(
+    int minute,
+    List<RoutePointModel> points,
+  ) {
+    final validElevations = points.map((p) => p.elevation).toList();
 
     if (validElevations.isEmpty) return null;
 
-    final avgElevation = validElevations.reduce((a, b) => a + b) / validElevations.length;
+    final avgElevation =
+        validElevations.reduce((a, b) => a + b) / validElevations.length;
     return FlSpot(minute.toDouble(), avgElevation);
   }
 
-  static FlSpot? _calculateAveragePace(int minute, List<RoutePointModel> points) {
-    final validSpeeds = points
-        .where((p) => p.speed > 0)
-        .map((p) => p.speed)
-        .toList();
+  static FlSpot? _calculateAveragePace(
+    int minute,
+    List<RoutePointModel> points,
+  ) {
+    final validSpeeds =
+        points.where((p) => p.speed > 0).map((p) => p.speed).toList();
 
     if (validSpeeds.isEmpty) return null;
 
@@ -145,14 +142,16 @@ class ChartDataProcessor {
     return FlSpot(minute.toDouble(), paceMinutesPerKm);
   }
 
-  static FlSpot? _calculateAverageAccuracy(int minute, List<RoutePointModel> points) {
-    final validAccuracies = points
-        .map((p) => p.accuracy)
-        .toList();
+  static FlSpot? _calculateAverageAccuracy(
+    int minute,
+    List<RoutePointModel> points,
+  ) {
+    final validAccuracies = points.map((p) => p.accuracy).toList();
 
     if (validAccuracies.isEmpty) return null;
 
-    final avgAccuracy = validAccuracies.reduce((a, b) => a + b) / validAccuracies.length;
+    final avgAccuracy =
+        validAccuracies.reduce((a, b) => a + b) / validAccuracies.length;
     return FlSpot(minute.toDouble(), avgAccuracy);
   }
 }

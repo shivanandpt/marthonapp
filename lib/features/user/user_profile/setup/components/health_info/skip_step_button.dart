@@ -6,8 +6,7 @@ class SkipStepButton extends StatelessWidget {
   final UserProfileSetupController controller;
   final VoidCallback? onSkip;
 
-  const SkipStepButton({Key? key, required this.controller, this.onSkip})
-    : super(key: key);
+  const SkipStepButton({super.key, required this.controller, this.onSkip});
 
   @override
   Widget build(BuildContext context) {

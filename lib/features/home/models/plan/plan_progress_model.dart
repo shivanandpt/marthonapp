@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class PlanProgressModel {
   final bool isActive;
   final int currentWeek;

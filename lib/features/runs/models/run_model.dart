@@ -147,7 +147,7 @@ class RunModel {
   String get formattedPace {
     final paceMinutes = avgPace.floor();
     final paceSeconds = ((avgPace - paceMinutes) * 60).round();
-    return '${paceMinutes}:${paceSeconds.toString().padLeft(2, '0')}/km';
+    return '$paceMinutes:${paceSeconds.toString().padLeft(2, '0')}/km';
   }
 
   bool get isCompleted => status == 'completed';

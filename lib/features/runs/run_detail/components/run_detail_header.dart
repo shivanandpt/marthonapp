@@ -7,7 +7,7 @@ import '../../models/run_model.dart';
 class RunDetailHeader extends StatelessWidget {
   final RunModel run;
 
-  const RunDetailHeader({Key? key, required this.run}) : super(key: key);
+  const RunDetailHeader({super.key, required this.run});
 
   @override
   Widget build(BuildContext context) {

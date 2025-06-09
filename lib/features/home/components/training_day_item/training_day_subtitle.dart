@@ -6,7 +6,7 @@ import 'package:marunthon_app/features/home/models/training_day_model.dart';
 class TrainingDaySubtitle extends StatelessWidget {
   final TrainingDayModel day;
 
-  const TrainingDaySubtitle({Key? key, required this.day}) : super(key: key);
+  const TrainingDaySubtitle({super.key, required this.day});
 
   @override
   Widget build(BuildContext context) {

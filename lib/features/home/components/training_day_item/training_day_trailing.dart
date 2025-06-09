@@ -8,10 +8,10 @@ class TrainingDayTrailing extends StatelessWidget {
   final bool isToday;
 
   const TrainingDayTrailing({
-    Key? key,
+    super.key,
     required this.day,
     required this.isToday,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

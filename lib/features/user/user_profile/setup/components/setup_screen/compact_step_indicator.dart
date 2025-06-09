@@ -5,8 +5,7 @@ import '../../controllers/user_profile_setup_controller.dart';
 class CompactStepIndicator extends StatelessWidget {
   final UserProfileSetupController controller;
 
-  const CompactStepIndicator({Key? key, required this.controller})
-    : super(key: key);
+  const CompactStepIndicator({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {

@@ -13,7 +13,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 class RunTrackingScreen extends StatelessWidget {
   final List<RunPhaseModel>? phases;
 
-  const RunTrackingScreen({Key? key, this.phases}) : super(key: key);
+  const RunTrackingScreen({super.key, this.phases});
 
   @override
   Widget build(BuildContext context) {

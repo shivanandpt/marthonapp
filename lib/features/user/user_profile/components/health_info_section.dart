@@ -7,7 +7,7 @@ import 'profile_info_tile.dart';
 class HealthInfoSection extends StatelessWidget {
   final UserModel user;
 
-  const HealthInfoSection({Key? key, required this.user}) : super(key: key);
+  const HealthInfoSection({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {

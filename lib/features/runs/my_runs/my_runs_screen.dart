@@ -7,7 +7,7 @@ import 'package:marunthon_app/core/theme/app_colors.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class MyRunsScreen extends StatefulWidget {
-  const MyRunsScreen({Key? key}) : super(key: key);
+  const MyRunsScreen({super.key});
 
   @override
   State<MyRunsScreen> createState() => _MyRunsScreenState();

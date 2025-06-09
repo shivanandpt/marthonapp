@@ -8,8 +8,7 @@ import 'training_pref/customization_notice.dart';
 class TrainingPrefStep extends StatelessWidget {
   final UserProfileSetupController controller;
 
-  const TrainingPrefStep({Key? key, required this.controller})
-    : super(key: key);
+  const TrainingPrefStep({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {

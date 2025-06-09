@@ -7,8 +7,7 @@ import 'step_content.dart';
 class ScrollableContent extends StatelessWidget {
   final UserProfileSetupController controller;
 
-  const ScrollableContent({Key? key, required this.controller})
-    : super(key: key);
+  const ScrollableContent({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {

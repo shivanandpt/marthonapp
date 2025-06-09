@@ -12,8 +12,7 @@ class RunCard extends StatelessWidget {
   final RunModel run;
   final Function(String runId) onDelete;
 
-  const RunCard({Key? key, required this.run, required this.onDelete})
-    : super(key: key);
+  const RunCard({super.key, required this.run, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
