@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
 
 class TrainingFrequencyHeader extends StatelessWidget {
-  const TrainingFrequencyHeader({Key? key}) : super(key: key);
+  const TrainingFrequencyHeader({super.key});
 
   @override
   Widget build(BuildContext context) {

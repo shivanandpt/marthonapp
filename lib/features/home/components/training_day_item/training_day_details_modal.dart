@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:marunthon_app/core/theme/app_colors.dart';
 import 'package:marunthon_app/features/home/models/training_day_model.dart';
 import 'details/modal_header.dart';
 import 'details/modal_content.dart';

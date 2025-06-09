@@ -7,8 +7,7 @@ import 'profile_info_tile.dart';
 class TrainingPreferencesSection extends StatelessWidget {
   final UserModel user;
 
-  const TrainingPreferencesSection({Key? key, required this.user})
-    : super(key: key);
+  const TrainingPreferencesSection({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {

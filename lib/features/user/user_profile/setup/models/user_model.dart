@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'basic_info_model.dart';
 import 'physical_attributes_model.dart';
 import 'preferences_model.dart';

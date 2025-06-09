@@ -8,8 +8,7 @@ class RunListScreen extends StatelessWidget {
   final List<RunModel> runs;
   final Function(String runId) onDelete;
 
-  const RunListScreen({Key? key, required this.runs, required this.onDelete})
-    : super(key: key);
+  const RunListScreen({super.key, required this.runs, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {

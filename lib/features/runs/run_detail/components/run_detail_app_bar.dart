@@ -4,8 +4,7 @@ import 'package:marunthon_app/core/theme/app_colors.dart';
 class RunDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
 
-  const RunDetailAppBar({Key? key, this.title = "Run Details"})
-    : super(key: key);
+  const RunDetailAppBar({super.key, this.title = "Run Details"});
 
   @override
   Widget build(BuildContext context) {

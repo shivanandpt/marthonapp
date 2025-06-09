@@ -4,18 +4,14 @@ import 'plan/plan_progress_model.dart';
 import 'plan/plan_dates_model.dart';
 import 'plan/plan_settings_model.dart';
 import 'plan/plan_statistics_model.dart';
-import 'training_day_model.dart';
 
 class TrainingPlanModel {
-  final String id;
+  final String? id;
   final String userId;
   final String goalType; // "5K", "10K", "half-marathon", "marathon"
   final String planType; // "custom" or "default"
   final String planName;
   final String description;
-
-  // Training Days - Array of training sessions (count equals totalSessions)
-  final List<TrainingDayModel> trainingDays;
 
   // Plan Structure
   final PlanStructureModel structure;
@@ -37,13 +33,12 @@ class TrainingPlanModel {
   final DateTime updatedAt;
 
   TrainingPlanModel({
-    required this.id,
+    this.id,
     required this.userId,
     required this.goalType,
     required this.planType,
     required this.planName,
     required this.description,
-    required this.trainingDays,
     required this.structure,
     required this.progress,
     required this.dates,
@@ -51,52 +46,12 @@ class TrainingPlanModel {
     required this.statistics,
     required this.createdAt,
     required this.updatedAt,
-  }) : assert(
-         trainingDays.length == structure.totalSessions,
-         'Training days count (${trainingDays.length}) must equal totalSessions (${structure.totalSessions})',
-       );
+  });
 
   // Backward compatibility getters
   int get weeks => structure.weeks;
   bool get isActive => progress.isActive;
   bool get custom => planType == 'custom';
-
-  // Helper getters for training days using existing fields
-  List<TrainingDayModel> get completedTrainingDays =>
-      trainingDays.where((day) => day.completed).toList();
-
-  List<TrainingDayModel> get remainingTrainingDays =>
-      trainingDays.where((day) => !day.completed).toList();
-
-  List<TrainingDayModel> get upcomingTrainingDays =>
-      trainingDays
-          .where(
-            (day) =>
-                !day.completed &&
-                day.dateScheduled.isAfter(
-                  DateTime.now().subtract(const Duration(days: 1)),
-                ),
-          )
-          .toList();
-
-  TrainingDayModel? get todaysTrainingDay {
-    final today = DateTime.now();
-    try {
-      return trainingDays.firstWhere(
-        (day) => _isSameDay(day.dateScheduled, today) && !day.completed,
-      );
-    } catch (e) {
-      return null;
-    }
-  }
-
-  TrainingDayModel? get nextTrainingDay {
-    final upcoming = upcomingTrainingDays;
-    if (upcoming.isEmpty) return null;
-
-    upcoming.sort((a, b) => a.dateScheduled.compareTo(b.dateScheduled));
-    return upcoming.first;
-  }
 
   // Helper getters
   String get goalDisplayName {
@@ -134,14 +89,6 @@ class TrainingPlanModel {
       planType: data['planType'] ?? 'default',
       planName: data['planName'] ?? 'Training Plan',
       description: data['description'] ?? '',
-      trainingDays:
-          (data['trainingDays'] as List<dynamic>?)
-              ?.map(
-                (dayData) =>
-                    TrainingDayModel.fromMap(dayData as Map<String, dynamic>),
-              )
-              .toList() ??
-          [],
       structure: PlanStructureModel.fromMap(data['structure'] ?? {}),
       progress: PlanProgressModel.fromMap(data['progress'] ?? {}),
       dates: PlanDatesModel.fromMap(data['dates'] ?? {}),
@@ -149,6 +96,37 @@ class TrainingPlanModel {
       statistics: PlanStatisticsModel.fromMap(data['statistics'] ?? {}),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+    );
+  }
+
+  // Convert Map to TrainingPlanModel
+  factory TrainingPlanModel.fromMap(Map<String, dynamic> data) {
+    return TrainingPlanModel(
+      id: data['id'], // May be null for new training plans
+      userId: data['userId'] ?? '',
+      goalType: data['goalType'] ?? '5K',
+      planType: data['planType'] ?? 'default',
+      planName: data['planName'] ?? 'Training Plan',
+      description: data['description'] ?? '',
+      structure: PlanStructureModel.fromMap(data['structure'] ?? {}),
+      progress: PlanProgressModel.fromMap(data['progress'] ?? {}),
+      dates: PlanDatesModel.fromMap(data['dates'] ?? {}),
+      settings: PlanSettingsModel.fromMap(data['settings'] ?? {}),
+      statistics: PlanStatisticsModel.fromMap(data['statistics'] ?? {}),
+      createdAt:
+          data['createdAt'] is DateTime
+              ? data['createdAt']
+              : (data['createdAt'] is Timestamp
+                  ? (data['createdAt'] as Timestamp).toDate()
+                  : DateTime.tryParse(data['createdAt']?.toString() ?? '') ??
+                      DateTime.now()),
+      updatedAt:
+          data['updatedAt'] is DateTime
+              ? data['updatedAt']
+              : (data['updatedAt'] is Timestamp
+                  ? (data['updatedAt'] as Timestamp).toDate()
+                  : DateTime.tryParse(data['updatedAt']?.toString() ?? '') ??
+                      DateTime.now()),
     );
   }
 
@@ -160,7 +138,6 @@ class TrainingPlanModel {
       'planType': planType,
       'planName': planName,
       'description': description,
-      'trainingDays': trainingDays.map((day) => day.toMap()).toList(),
       'structure': structure.toMap(),
       'progress': progress.toMap(),
       'dates': dates.toMap(),
@@ -171,6 +148,30 @@ class TrainingPlanModel {
     };
   }
 
+  // Convert TrainingPlanModel to Map (for local use, includes id if available)
+  Map<String, dynamic> toMap() {
+    final map = {
+      'userId': userId,
+      'goalType': goalType,
+      'planType': planType,
+      'planName': planName,
+      'description': description,
+      'structure': structure.toMap(),
+      'progress': progress.toMap(),
+      'dates': dates.toMap(),
+      'settings': settings.toMap(),
+      'statistics': statistics.toMap(),
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+
+    if (id != null) {
+      map['id'] = id!;
+    }
+
+    return map;
+  }
+
   // Create a copy with updated fields
   TrainingPlanModel copyWith({
     String? id,
@@ -179,7 +180,6 @@ class TrainingPlanModel {
     String? planType,
     String? planName,
     String? description,
-    List<TrainingDayModel>? trainingDays,
     PlanStructureModel? structure,
     PlanProgressModel? progress,
     PlanDatesModel? dates,
@@ -195,7 +195,6 @@ class TrainingPlanModel {
       planType: planType ?? this.planType,
       planName: planName ?? this.planName,
       description: description ?? this.description,
-      trainingDays: trainingDays ?? this.trainingDays,
       structure: structure ?? this.structure,
       progress: progress ?? this.progress,
       dates: dates ?? this.dates,
@@ -203,66 +202,6 @@ class TrainingPlanModel {
       statistics: statistics ?? this.statistics,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
-    );
-  }
-
-  // Update a specific training day using existing fields
-  TrainingPlanModel updateTrainingDay(
-    String trainingDayId,
-    TrainingDayModel Function(TrainingDayModel) updateFunction,
-  ) {
-    final updatedTrainingDays =
-        trainingDays.map((day) {
-          if (day.id == trainingDayId) {
-            return updateFunction(day);
-          }
-          return day;
-        }).toList();
-
-    return copyWith(
-      trainingDays: updatedTrainingDays,
-      updatedAt: DateTime.now(),
-    );
-  }
-
-  // Mark training day as completed using existing fields only
-  TrainingPlanModel markTrainingDayCompleted(String trainingDayId) {
-    final updatedTrainingDays =
-        trainingDays.map((day) {
-          if (day.id == trainingDayId) {
-            return day.copyWith(
-              status: day.status.copyWith(completed: true),
-              completionData: day.completionData.copyWith(
-                completedAt: DateTime.now(),
-              ),
-            );
-          }
-          return day;
-        }).toList();
-
-    final completedCount =
-        updatedTrainingDays.where((day) => day.completed).length;
-
-    return copyWith(
-      trainingDays: updatedTrainingDays,
-      progress: progress.copyWith(completedSessions: completedCount),
-      updatedAt: DateTime.now(),
-    );
-  }
-
-  // Replace a training day entirely
-  TrainingPlanModel replaceTrainingDay(TrainingDayModel updatedDay) {
-    final updatedTrainingDays =
-        trainingDays.map((day) {
-          if (day.id == updatedDay.id) {
-            return updatedDay;
-          }
-          return day;
-        }).toList();
-
-    return copyWith(
-      trainingDays: updatedTrainingDays,
-      updatedAt: DateTime.now(),
     );
   }
 
@@ -280,7 +219,6 @@ class TrainingPlanModel {
     );
   }
 
-  // Helper methods for plan management
   TrainingPlanModel markAsCompleted() {
     return copyWith(
       progress: progress.copyWith(isActive: false),
@@ -289,33 +227,26 @@ class TrainingPlanModel {
     );
   }
 
-  // Update plan progress - required by management service
   TrainingPlanModel updateProgress({
-    int? completedSessions,
-    bool? isActive,
     int? currentWeek,
     int? currentDay,
     int? completedWeeks,
+    int? completedSessions,
   }) {
     return copyWith(
       progress: progress.copyWith(
-        completedSessions: completedSessions,
-        isActive: isActive,
         currentWeek: currentWeek,
         currentDay: currentDay,
         completedWeeks: completedWeeks,
+        completedSessions: completedSessions,
       ),
       updatedAt: DateTime.now(),
     );
   }
 
-  bool _isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
-  }
-
   @override
   String toString() {
-    return 'TrainingPlanModel(id: $id, goalType: $goalType, planName: $planName, isActive: ${progress.isActive}, trainingDays: ${trainingDays.length})';
+    return 'TrainingPlanModel(id: $id, goalType: $goalType, planName: $planName, isActive: ${progress.isActive})';
   }
 
   @override

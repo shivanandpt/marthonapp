@@ -8,12 +8,12 @@ class MenuItemTile extends StatelessWidget {
   final VoidCallback? onTap;
 
   const MenuItemTile({
-    Key? key,
+    super.key,
     required this.item,
     this.isLoading = false,
     this.isEnabled = true,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

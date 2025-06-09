@@ -5,7 +5,7 @@ import '../../controllers/user_profile_setup_controller.dart';
 class StepHeader extends StatelessWidget {
   final UserProfileSetupController controller;
 
-  const StepHeader({Key? key, required this.controller}) : super(key: key);
+  const StepHeader({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {

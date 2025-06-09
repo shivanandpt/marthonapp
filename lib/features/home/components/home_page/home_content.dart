@@ -3,9 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/home_bloc.dart';
 import '../../bloc/home_event.dart';
 import '../../bloc/home_state.dart';
-import '../welcome_card.dart';
 import '../training_plan_card.dart';
-import '../today_training_card.dart';
 import '../no_plan_card.dart';
 import '../../../runs/recent_runs_section/screens/recent_runs_section.dart';
 import '../upcoming_training_section.dart';
@@ -16,7 +14,7 @@ import 'start_run_fab.dart';
 class HomeContent extends StatelessWidget {
   final HomeLoaded state;
 
-  const HomeContent({Key? key, required this.state}) : super(key: key);
+  const HomeContent({super.key, required this.state});
 
   @override
   Widget build(BuildContext context) {
@@ -31,31 +29,26 @@ class HomeContent extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Welcome Card
-              WelcomeCard(userModel: state.userModel),
-              const SizedBox(height: 24),
-
-              // Training Plan Progress Card
+              // Training Plan Progress Card with integrated workout view
               if (state.activePlan != null)
                 TrainingPlanCard(
                   activePlan: state.activePlan!,
+                  allTrainingDays: state.allTrainingDays,
                   daysCompleted: state.daysCompleted,
                   totalDays: state.totalDays,
                   currentWeek: state.currentWeek,
                   totalWeeks: state.totalWeeks,
+                  todaysTraining: state.todaysTraining,
+                  upcomingDays: state.upcomingTrainingDays,
                 ),
 
-              // Today's Training
-              if (state.todaysTraining != null &&
-                  state.todaysTraining!.id.isNotEmpty &&
-                  state.activePlan != null)
-                TodayTrainingCard(todaysTraining: state.todaysTraining!),
+              // Remove separate Today's Training Card since it's now integrated
 
-              // No Plan Card
-              if (state.activePlan == null) const NoPlanCard(),
-
-              // Quick Start Menu Card - Show after no plan or with active plan
-              const QuickStartMenu(),
+              // No Plan Card and Quick Start Menu - Only show when no active plan
+              if (state.activePlan == null) ...[
+                const NoPlanCard(),
+                const QuickStartMenu(),
+              ],
 
               const SizedBox(height: 24),
 
@@ -79,8 +72,8 @@ class HomeContent extends StatelessWidget {
                   todaysTraining: state.todaysTraining,
                 ),
 
-              // Start Free Run Button at bottom
-              const StartRunFAB(),
+              // Start Free Run Button - Only show when no active plan
+              if (state.activePlan == null) const StartRunFAB(),
             ],
           ),
         ),

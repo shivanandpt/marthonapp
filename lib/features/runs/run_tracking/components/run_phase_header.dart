@@ -14,7 +14,7 @@ class RunPhaseHeader extends StatelessWidget {
   final VoidCallback? onPreviousPhase;
 
   const RunPhaseHeader({
-    Key? key,
+    super.key,
     required this.currentPhase,
     required this.currentPhaseIndex,
     required this.totalPhases,
@@ -23,7 +23,7 @@ class RunPhaseHeader extends StatelessWidget {
     required this.hasPreviousPhase,
     this.onNextPhase,
     this.onPreviousPhase,
-  }) : super(key: key);
+  });
 
   Color _getPhaseColor(RunPhaseType type) {
     switch (type) {

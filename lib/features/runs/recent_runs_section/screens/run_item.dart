@@ -9,7 +9,7 @@ import 'package:marunthon_app/features/runs/models/run_model.dart';
 class RunItem extends StatelessWidget {
   final RunModel run;
 
-  const RunItem({Key? key, required this.run}) : super(key: key);
+  const RunItem({super.key, required this.run});
 
   void _navigateToRunDetail(BuildContext context) {
     // Navigate to run details using the route you have set up

@@ -11,7 +11,7 @@ import 'training_day_item/training_day_details_modal.dart';
 class TrainingDayItem extends StatelessWidget {
   final TrainingDayModel day;
 
-  const TrainingDayItem({Key? key, required this.day}) : super(key: key);
+  const TrainingDayItem({super.key, required this.day});
 
   @override
   Widget build(BuildContext context) {

@@ -8,12 +8,12 @@ class RunCardStatItem extends StatelessWidget {
   final Color color;
 
   const RunCardStatItem({
-    Key? key,
+    super.key,
     required this.icon,
     required this.label,
     required this.value,
     required this.color,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

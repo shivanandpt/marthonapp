@@ -11,11 +11,11 @@ class RunListHeader extends StatelessWidget {
   final Function(SortOption) onSortChanged;
 
   const RunListHeader({
-    Key? key,
+    super.key,
     required this.runCount,
     required this.currentSort,
     required this.onSortChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

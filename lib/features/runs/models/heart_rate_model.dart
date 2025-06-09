@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class HeartRateZones {
   final int zone1; // seconds in each heart rate zone
   final int zone2;

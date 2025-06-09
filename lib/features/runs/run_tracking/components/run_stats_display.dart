@@ -11,14 +11,14 @@ class RunStatsDisplay extends StatelessWidget {
   final int totalRoutePoints;
 
   const RunStatsDisplay({
-    Key? key,
+    super.key,
     required this.totalTime,
     required this.totalDistance,
     required this.currentSpeed,
     required this.currentElevation,
     required this.averagePace,
     required this.totalRoutePoints,
-  }) : super(key: key);
+  });
 
   String _formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');

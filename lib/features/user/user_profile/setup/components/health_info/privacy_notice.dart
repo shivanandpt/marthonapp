@@ -3,7 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
 
 class PrivacyNotice extends StatelessWidget {
-  const PrivacyNotice({Key? key}) : super(key: key);
+  const PrivacyNotice({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -210,7 +210,7 @@ class UserService {
       final querySnapshot =
           await _usersCollection
               .where('name', isGreaterThanOrEqualTo: query)
-              .where('name', isLessThanOrEqualTo: query + '\uf8ff')
+              .where('name', isLessThanOrEqualTo: '$query\uf8ff')
               .get();
 
       return querySnapshot.docs

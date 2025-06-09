@@ -6,8 +6,7 @@ import '../../controllers/user_profile_setup_controller.dart';
 class ExperienceLevelSelector extends StatelessWidget {
   final UserProfileSetupController controller;
 
-  const ExperienceLevelSelector({Key? key, required this.controller})
-    : super(key: key);
+  const ExperienceLevelSelector({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {

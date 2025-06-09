@@ -55,7 +55,36 @@ class DayTotalsModel {
     };
   }
 
-  // Helper getters
+  // Helper getters with metric system support
+  String formattedTotalDurationWithOptions({bool showSeconds = true}) {
+    final hours = totalDuration ~/ 3600;
+    final minutes = (totalDuration % 3600) ~/ 60;
+    final seconds = totalDuration % 60;
+
+    if (hours > 0) {
+      return showSeconds
+          ? '${hours}h ${minutes}m ${seconds}s'
+          : '${hours}h ${minutes}m';
+    } else if (minutes > 0) {
+      return showSeconds ? '${minutes}m ${seconds}s' : '${minutes}m';
+    } else {
+      return '${seconds}s';
+    }
+  }
+
+  String formattedRunTimeWithOptions({bool showSeconds = true}) {
+    final minutes = totalRunTime ~/ 60;
+    final seconds = totalRunTime % 60;
+    return showSeconds ? '${minutes}m ${seconds}s' : '${minutes}m';
+  }
+
+  String formattedWalkTimeWithOptions({bool showSeconds = true}) {
+    final minutes = totalWalkTime ~/ 60;
+    final seconds = totalWalkTime % 60;
+    return showSeconds ? '${minutes}m ${seconds}s' : '${minutes}m';
+  }
+
+  // Default getters (backwards compatibility)
   String get formattedTotalDuration {
     final hours = totalDuration ~/ 3600;
     final minutes = (totalDuration % 3600) ~/ 60;

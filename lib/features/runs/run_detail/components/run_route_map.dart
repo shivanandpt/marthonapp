@@ -8,7 +8,7 @@ import '../../models/route_point_model.dart';
 class RunRouteMap extends StatefulWidget {
   final RunModel run;
 
-  const RunRouteMap({Key? key, required this.run}) : super(key: key);
+  const RunRouteMap({super.key, required this.run});
 
   @override
   State<RunRouteMap> createState() => _RunRouteMapState();
@@ -54,41 +54,11 @@ class _RunRouteMapState extends State<RunRouteMap> {
       List<RoutePointModel> points = [];
 
       print('Route points type: ${widget.run.routePoints.runtimeType}');
-      print('Route points count: ${widget.run.routePoints?.length ?? 0}');
+      print('Route points count: ${widget.run.routePoints.length ?? 0}');
 
       // Handle both List<RoutePointModel> and List<dynamic> cases
-      if (widget.run.routePoints is List<RoutePointModel>) {
-        points = widget.run.routePoints as List<RoutePointModel>;
-        print('Direct RoutePointModel list with ${points.length} points');
-      } else if (widget.run.routePoints is List<dynamic>) {
-        final dynamicList = widget.run.routePoints as List<dynamic>;
-        print('Dynamic list with ${dynamicList.length} items');
-
-        points =
-            dynamicList
-                .where((point) {
-                  if (point is Map<String, dynamic>) {
-                    return point['latitude'] != null &&
-                        point['longitude'] != null;
-                  }
-                  return false;
-                })
-                .map((point) {
-                  try {
-                    return RoutePointModel.fromMap(
-                      point as Map<String, dynamic>,
-                    );
-                  } catch (e) {
-                    print('Error creating RoutePointModel: $e');
-                    return null;
-                  }
-                })
-                .where((point) => point != null)
-                .cast<RoutePointModel>()
-                .toList();
-
-        print('Converted to ${points.length} RoutePointModel objects');
-      }
+      points = widget.run.routePoints as List<RoutePointModel>;
+      print('Direct RoutePointModel list with ${points.length} points');
 
       // Filter out invalid coordinates and convert to LatLng
       final validLatLngs =
@@ -172,7 +142,7 @@ class _RunRouteMapState extends State<RunRouteMap> {
               ),
               SizedBox(height: 4),
               Text(
-                'Route points: ${widget.run.routePoints?.length ?? 0}',
+                'Route points: ${widget.run.routePoints.length ?? 0}',
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
               ),
             ],

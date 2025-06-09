@@ -6,8 +6,7 @@ import '../../controllers/user_profile_setup_controller.dart';
 class DateOfBirthSelector extends StatelessWidget {
   final UserProfileSetupController controller;
 
-  const DateOfBirthSelector({Key? key, required this.controller})
-    : super(key: key);
+  const DateOfBirthSelector({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {

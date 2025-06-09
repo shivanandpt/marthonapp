@@ -7,7 +7,7 @@ import 'package:marunthon_app/features/home/utils/workout_phase_icons.dart';
 class WorkoutContent extends StatelessWidget {
   final TrainingDayModel day;
 
-  const WorkoutContent({Key? key, required this.day}) : super(key: key);
+  const WorkoutContent({super.key, required this.day});
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +80,7 @@ class WorkoutContent extends StatelessWidget {
               ),
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }

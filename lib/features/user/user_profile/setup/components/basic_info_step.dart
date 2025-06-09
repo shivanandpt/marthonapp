@@ -6,7 +6,7 @@ import 'package:marunthon_app/features/user/user_profile/setup/components/goal_s
 class BasicInfoStep extends StatelessWidget {
   final UserProfileSetupController controller;
 
-  const BasicInfoStep({Key? key, required this.controller}) : super(key: key);
+  const BasicInfoStep({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {

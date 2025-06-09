@@ -30,7 +30,7 @@ class RunStatsGrid extends StatelessWidget {
     final int minutes = (paceSecondsPerKm / 60).floor();
     final int seconds = (paceSecondsPerKm % 60).round();
 
-    return "${minutes}:${seconds.toString().padLeft(2, '0')}";
+    return "$minutes:${seconds.toString().padLeft(2, '0')}";
   }
 
   // Convert avgSpeed from m/s to km/h
@@ -52,7 +52,7 @@ class RunStatsGrid extends StatelessWidget {
                 child: StatBox(
                   icon: LucideIcons.mapPin,
                   label: "Distance",
-                  value: "${(run.totalDistance / 1000).toStringAsFixed(2)}",
+                  value: (run.totalDistance / 1000).toStringAsFixed(2),
                   unit: "km",
                   color: AppColors.primary,
                 ),

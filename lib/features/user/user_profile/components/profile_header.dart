@@ -6,7 +6,7 @@ import '../setup/models/user_model.dart';
 class ProfileHeader extends StatelessWidget {
   final UserModel user;
 
-  const ProfileHeader({Key? key, required this.user}) : super(key: key);
+  const ProfileHeader({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {

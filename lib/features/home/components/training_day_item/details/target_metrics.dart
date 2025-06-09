@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
 import 'package:marunthon_app/features/home/models/training_day_model.dart';
+import 'package:marunthon_app/shared/utils/metric_conversion_utils.dart';
 import 'metric_item.dart';
 
 class TargetMetrics extends StatelessWidget {
   final TrainingDayModel day;
+  final String metricSystem;
 
-  const TargetMetrics({Key? key, required this.day}) : super(key: key);
+  const TargetMetrics({
+    super.key,
+    required this.day,
+    this.metricSystem = 'metric',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -30,8 +36,7 @@ class TargetMetrics extends StatelessWidget {
               Expanded(
                 child: MetricItem(
                   label: "Distance",
-                  value:
-                      "${(day.targetMetrics.targetDistance / 1000).toStringAsFixed(1)} km",
+                  value: day.targetMetrics.formattedDistance(metricSystem),
                   icon: LucideIcons.mapPin,
                 ),
               ),
@@ -39,7 +44,10 @@ class TargetMetrics extends StatelessWidget {
               Expanded(
                 child: MetricItem(
                   label: "Duration",
-                  value: "${day.totals.totalDuration} min",
+                  value: MetricConversionUtils.formatDuration(
+                    day.totals.totalDuration,
+                    showSeconds: false,
+                  ),
                   icon: LucideIcons.clock,
                 ),
               ),
@@ -51,6 +59,14 @@ class TargetMetrics extends StatelessWidget {
               label: "Calories",
               value: "${day.targetMetrics.targetCalories} cal",
               icon: LucideIcons.flame,
+            ),
+          ],
+          if (day.targetMetrics.targetPace > 0) ...[
+            SizedBox(height: 8),
+            MetricItem(
+              label: "Target Pace",
+              value: day.targetMetrics.formattedPace(metricSystem),
+              icon: LucideIcons.activity,
             ),
           ],
         ],

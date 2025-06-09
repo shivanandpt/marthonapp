@@ -9,8 +9,7 @@ import 'package:marunthon_app/features/home/models/training_day_model.dart';
 class TodayTrainingCard extends StatelessWidget {
   final TrainingDayModel todaysTraining;
 
-  const TodayTrainingCard({Key? key, required this.todaysTraining})
-    : super(key: key);
+  const TodayTrainingCard({super.key, required this.todaysTraining});
 
   // Helper method to format duration from phase map
   String _formatPhaseDuration(Map<String, dynamic> phase) {
@@ -114,7 +113,7 @@ class TodayTrainingCard extends StatelessWidget {
                         ],
                       ),
                     );
-                  }).toList(),
+                  }),
 
                   SizedBox(height: 8),
                   Container(

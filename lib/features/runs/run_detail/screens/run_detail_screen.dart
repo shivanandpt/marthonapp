@@ -12,7 +12,7 @@ import '../components/debug_map_info.dart';
 class RunDetailScreen extends StatelessWidget {
   final RunModel run;
 
-  const RunDetailScreen({Key? key, required this.run}) : super(key: key);
+  const RunDetailScreen({super.key, required this.run});
 
   @override
   Widget build(BuildContext context) {

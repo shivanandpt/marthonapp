@@ -4,7 +4,7 @@ import 'package:marunthon_app/core/theme/app_colors.dart';
 class DebugMapInfo extends StatelessWidget {
   final List<dynamic> routePoints;
 
-  const DebugMapInfo({Key? key, required this.routePoints}) : super(key: key);
+  const DebugMapInfo({super.key, required this.routePoints});
 
   @override
   Widget build(BuildContext context) {
