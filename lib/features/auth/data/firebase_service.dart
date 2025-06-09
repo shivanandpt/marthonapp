@@ -10,22 +10,38 @@ class FirebaseService implements AuthRepository {
   @override
   Future<User?> signInWithGoogle() async {
     try {
+      print('Starting Google Sign-In process...');
+
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return null; // User canceled sign-in
+      if (googleUser == null) {
+        print('Google Sign-In cancelled by user');
+        return null; // User canceled sign-in
+      }
+
+      print('Google user signed in: ${googleUser.email}');
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
+
+      print('Got Google authentication tokens');
+
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
+      print('Created Firebase credential, signing in...');
+
       final UserCredential userCredential = await _auth.signInWithCredential(
         credential,
       );
+
+      print('Firebase sign-in successful: ${userCredential.user?.email}');
+
       return userCredential.user;
     } catch (e) {
       print('Error signing in with Google: $e');
+      print('Error type: ${e.runtimeType}');
       return null;
     }
   }

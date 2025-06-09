@@ -15,6 +15,8 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final FirebaseService _firebaseService = FirebaseService();
   final UserService _userService = UserService();
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -86,11 +88,18 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _handleSignIn() async {
-    User? user = await _firebaseService.signInWithGoogle();
-    if (user != null) {
-      try {
+    if (_isLoading) return; // Prevent multiple taps
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      User? user = await _firebaseService.signInWithGoogle();
+      if (user != null) {
         // Log analytics event
-        AnalyticsService.logEvent('login', {'method': '_handleSignIn'});
+        AnalyticsService.logEvent('login', {'method': 'google_sign_in'});
 
         // Check if user already exists in the new system
         var userModel = await _userService.getUserProfile(user.uid);
@@ -98,60 +107,186 @@ class _LoginPageState extends State<LoginPage> {
         if (userModel != null && _isProfileComplete(userModel)) {
           // User exists with complete profile, go to home
           AnalyticsService.setCurrentScreen('HomePage');
-          // FIXED: Using GoRouter instead of Navigator.pushReplacementNamed
-          context.go('/');
+          if (mounted) context.go('/');
           return;
         }
 
         // Regardless of old profile, direct to new profile setup
-        _navigateToProfileSetup();
-      } catch (e) {
-        print("Error processing user data: $e");
-        // On error, try to proceed to profile setup
-        _navigateToProfileSetup();
+        if (mounted) _navigateToProfileSetup();
+      } else {
+        // User cancelled the sign-in
+        setState(() {
+          _errorMessage = 'Sign-in was cancelled. Please try again.';
+        });
+      }
+    } catch (e) {
+      print("Error during sign-in: $e");
+      setState(() {
+        _errorMessage =
+            'Failed to sign in. Please check your internet connection and try again.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Existing build method remains unchanged
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Logo above the button
-            SizedBox(
-              width: 240,
-              height: 240,
-              child: Image.asset(
-                'assets/app_icon/run_mate.png',
-                fit: BoxFit.contain,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Logo above the button
+              SizedBox(
+                width: 240,
+                height: 240,
+                child: Image.asset(
+                  'assets/app_icon/run_mate.png',
+                  fit: BoxFit.contain,
+                ),
               ),
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: 220,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  textStyle: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+              const SizedBox(height: 48),
+
+              // App title
+              Text(
+                'Welcome to RunMate',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+
+              // Subtitle
+              Text(
+                'Track your runs, achieve your goals',
+                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 48),
+
+              // Error message
+              if (_errorMessage != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red[200]!),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        color: Colors.red[700],
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _errorMessage!,
+                          style: TextStyle(
+                            color: Colors.red[700],
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                onPressed: _handleSignIn,
-                child: const Text("Sign in with Google"),
+              ],
+
+              // Google Sign In Button
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        _isLoading ? Colors.grey[300] : Colors.white,
+                    foregroundColor: Colors.black87,
+                    side: BorderSide(color: Colors.grey[300]!),
+                    elevation: 2,
+                    shadowColor: Colors.black26,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: _isLoading ? null : _handleSignIn,
+                  child:
+                      _isLoading
+                          ? Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              const Text(
+                                'Signing in...',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          )
+                          : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                'assets/icons/google_logo.png',
+                                height: 24,
+                                width: 24,
+                                errorBuilder: (context, error, stackTrace) {
+                                  // Fallback if Google logo asset doesn't exist
+                                  return Icon(
+                                    Icons.account_circle,
+                                    size: 24,
+                                    color: Colors.blue[600],
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: 12),
+                              const Text(
+                                'Continue with Google',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 24),
+
+              // Privacy note
+              Text(
+                'By signing in, you agree to our Terms of Service and Privacy Policy',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );
