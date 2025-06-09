@@ -96,6 +96,7 @@ flutter:
   assets:
     - lib/assets/images/
     - assets/app_icon/
+    - assets/icons/
 
   
 
@@ -124,16 +125,28 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
-flutter_icons:
+
+flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/app_icon/run_mate.png"
+  # Adaptive icon configuration for Android
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: "assets/app_icon/run_mate.png"
+  # Generate different sizes for better quality
+  min_sdk_android: 21
 
 flutter_native_splash:
   color: "#ffffff"
   image: assets/app_icon/run_mate.png
-  # Increase the logo size with these parameters:
   android: true
   ios: true
+  # Configure for proper logo display without cutoff
   android_gravity: center
   ios_content_mode: scaleAspectFit
+  fullscreen: false
+  # Android 12+ configuration without branding to avoid conflicts
+  android_12:
+    image: assets/app_icon/run_mate.png
+    color: "#ffffff"
+
