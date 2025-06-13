@@ -1,4 +1,4 @@
-package com.shivanandpatil.marathonrun
+package marathonrun.shivanandpatil.com
 
 import io.flutter.embedding.android.FlutterActivity
 
