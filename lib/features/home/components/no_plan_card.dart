@@ -4,7 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
 
 class NoPlanCard extends StatelessWidget {
-  const NoPlanCard({Key? key}) : super(key: key);
+  const NoPlanCard({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -38,12 +38,12 @@ class NoPlanCard extends StatelessWidget {
                 // Navigate to training plan creation
                 context.push('/create-plan');
               },
-              child: Text("Create Training Plan"),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
+              child: Text("Create Training Plan"),
             ),
           ],
         ),
