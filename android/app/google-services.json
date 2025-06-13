@@ -7,17 +7,25 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:295154910952:android:7f5a838c93ad6875d0eb5d",
+        "mobilesdk_app_id": "1:295154910952:android:69a464aeb2423a2ad0eb5d",
         "android_client_info": {
-          "package_name": "com.example.marunthon_app"
+          "package_name": "com.shivanandpatil.marathonrun"
         }
       },
       "oauth_client": [
         {
-          "client_id": "295154910952-3eom64s9rcht67m36v9q7m0p0am1b4pe.apps.googleusercontent.com",
+          "client_id": "295154910952-0orq75dcm7s4pgvinvdu6tcidlrnn7nc.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.marunthon_app",
+            "package_name": "com.shivanandpatil.marathonrun",
+            "certificate_hash": "07fbe81059ec92b56a6d4fd050543483dd1cfce5"
+          }
+        },
+        {
+          "client_id": "295154910952-5a3e0tr4r32fkjj11oobkvpts0ggpdfu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.shivanandpatil.marathonrun",
             "certificate_hash": "0f8ee6ed9692e962069aec7c95cb4c5798891ec2"
           }
         },
