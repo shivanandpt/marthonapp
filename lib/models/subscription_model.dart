@@ -57,8 +57,8 @@ class SubscriptionModel {
     bool? active,
   }) {
     return SubscriptionModel(
-      id: this.id,
-      userId: this.userId,
+      id: id,
+      userId: userId,
       plan: plan ?? this.plan,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,

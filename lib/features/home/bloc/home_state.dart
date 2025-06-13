@@ -1,9 +1,9 @@
 // lib/features/home/bloc/home_state.dart
 import 'package:equatable/equatable.dart';
-import 'package:marunthon_app/models/user_model.dart';
-import 'package:marunthon_app/models/training_plan_model.dart';
-import 'package:marunthon_app/models/training_day_model.dart';
-import 'package:marunthon_app/models/run_model.dart';
+import 'package:marunthon_app/features/user/user_profile/setup/models/user_model.dart';
+import 'package:marunthon_app/features/home/models/training_plan_model.dart';
+import 'package:marunthon_app/features/home/models/training_day_model.dart';
+import 'package:marunthon_app/features/runs/models/run_model.dart';
 
 abstract class HomeState extends Equatable {
   const HomeState();
@@ -28,6 +28,8 @@ class HomeLoaded extends HomeState {
   final UserModel userModel;
   final TrainingPlanModel? activePlan;
   final List<RunModel> recentRuns;
+  final List<RunModel> allRuns; // Add this line for all runs
+  final List<TrainingDayModel> allTrainingDays; // Add all training days
   final List<TrainingDayModel> upcomingTrainingDays;
   final TrainingDayModel? todaysTraining;
   final int daysCompleted;
@@ -39,6 +41,8 @@ class HomeLoaded extends HomeState {
     required this.userModel,
     this.activePlan,
     required this.recentRuns,
+    required this.allRuns, // Add this parameter
+    required this.allTrainingDays, // Add all training days parameter
     required this.upcomingTrainingDays,
     this.todaysTraining,
     required this.daysCompleted,
@@ -52,6 +56,8 @@ class HomeLoaded extends HomeState {
     userModel,
     activePlan,
     recentRuns,
+    allRuns, // Add to props
+    allTrainingDays, // Add all training days to props
     upcomingTrainingDays,
     todaysTraining,
     daysCompleted,
@@ -59,6 +65,35 @@ class HomeLoaded extends HomeState {
     currentWeek,
     totalWeeks,
   ];
+
+  // Add copyWith method for easy state updates
+  HomeLoaded copyWith({
+    UserModel? userModel,
+    TrainingPlanModel? activePlan,
+    List<RunModel>? recentRuns,
+    List<RunModel>? allRuns,
+    List<TrainingDayModel>? allTrainingDays,
+    List<TrainingDayModel>? upcomingTrainingDays,
+    TrainingDayModel? todaysTraining,
+    int? daysCompleted,
+    int? totalDays,
+    int? currentWeek,
+    int? totalWeeks,
+  }) {
+    return HomeLoaded(
+      userModel: userModel ?? this.userModel,
+      activePlan: activePlan ?? this.activePlan,
+      recentRuns: recentRuns ?? this.recentRuns,
+      allRuns: allRuns ?? this.allRuns,
+      allTrainingDays: allTrainingDays ?? this.allTrainingDays,
+      upcomingTrainingDays: upcomingTrainingDays ?? this.upcomingTrainingDays,
+      todaysTraining: todaysTraining ?? this.todaysTraining,
+      daysCompleted: daysCompleted ?? this.daysCompleted,
+      totalDays: totalDays ?? this.totalDays,
+      currentWeek: currentWeek ?? this.currentWeek,
+      totalWeeks: totalWeeks ?? this.totalWeeks,
+    );
+  }
 }
 
 class HomeError extends HomeState {

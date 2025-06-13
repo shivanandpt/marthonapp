@@ -1,15 +1,14 @@
-import 'dart:math';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
-import 'package:marunthon_app/features/home/home_page.dart';
-import 'package:marunthon_app/features/settings/settings_page.dart';
-import 'package:marunthon_app/features/auth/presentation/login_page.dart';
+import 'package:marunthon_app/features/auth/bloc/logout_bloc.dart';
 import 'package:marunthon_app/core/services/analytics_service.dart';
-import 'package:marunthon_app/core/theme/app_colors.dart';
-import 'package:marunthon_app/features/user_profile/user_profile_screen.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import '../components/drawer_content.dart';
+import '../components/logout_loading_overlay.dart';
+import '../components/logout_confirmation_dialog.dart';
+import '../components/menu_navigation_handler.dart';
 
 class MenuDrawer extends StatefulWidget {
   const MenuDrawer({super.key});
@@ -20,276 +19,126 @@ class MenuDrawer extends StatefulWidget {
 
 class _MenuDrawerState extends State<MenuDrawer> {
   String userName = "Runner";
-  final List<Map<String, dynamic>> menuItems = [
-    {'icon': LucideIcons.home, 'title': 'Home', 'action': 'Home'},
-    {'icon': LucideIcons.user, 'title': 'Profile', 'action': 'Profile'},
-    {'icon': LucideIcons.footprints, 'title': 'My Runs', 'action': 'My Runs'},
-    {'icon': LucideIcons.settings, 'title': 'Settings', 'action': 'Settings'},
-    {'icon': LucideIcons.info, 'title': 'About', 'action': 'About'},
-    {'icon': LucideIcons.logOut, 'title': 'Logout', 'action': 'Logout'},
-  ];
+  late LogoutBloc _logoutBloc;
+  StreamSubscription<User?>? _authSubscription;
+
   @override
   void initState() {
     super.initState();
-    _loadUserName();
-    //sampleData();
+    _logoutBloc = LogoutBloc();
+    _setupAuthListener();
   }
 
-  Future<void> sampleData() async {
-    final firestore = FirebaseFirestore.instance;
-    final now = DateTime.now();
-    final random = Random();
-
-    // Generate 14 runs for the last 14 days
-    for (int index = 0; index < 14; index++) {
-      final daysAgo = 13 - index;
-      final runStartTime = now.subtract(Duration(days: daysAgo));
-      final userId = "5MsDTcEifVNYvuLp3bVdGYjeake2";
-
-      final totalDistance = double.parse(
-        (3.0 + random.nextDouble() * 3.0).toStringAsFixed(2),
-      ); // 3–6 km
-      final durationInSec = 900 + random.nextInt(900); // 15 to 30 min
-      final averageSpeed = double.parse(
-        (totalDistance / (durationInSec / 3600)).toStringAsFixed(2),
-      );
-
-      final startLat = 18.505845 + index * 0.001;
-      final startLon = 73.7715346 + index * 0.001;
-      final deltaLat = 0.00001 + random.nextDouble() * 0.00001;
-      final deltaLon = 0.00001 + random.nextDouble() * 0.00001;
-
-      final routePoints = List.generate(durationInSec.toInt(), (i) {
-        final pointTime = runStartTime.add(Duration(seconds: i));
-        return {
-          'latitude': double.parse(
-            (startLat + i * deltaLat).toStringAsFixed(6),
-          ),
-          'longitude': double.parse(
-            (startLon + i * deltaLon).toStringAsFixed(6),
-          ),
-          'elevation': 570 + random.nextInt(20), // 570–589
-          'speed': double.parse(
-            (random.nextDouble() * 6 + 6).toStringAsFixed(2),
-          ), // 6–12
-          'timestamp': pointTime.millisecondsSinceEpoch, // ✅ epoch ms
-        };
-      });
-
-      final avgElevation = double.parse(
-        (routePoints.map((e) => e['elevation'] as num).reduce((a, b) => a + b) /
-                routePoints.length)
-            .toStringAsFixed(2),
-      );
-
-      final runData = {
-        'userId': userId,
-        'distance': totalDistance,
-        'speed': averageSpeed,
-        'elevation': avgElevation,
-        'duration': durationInSec,
-        'routePoints': routePoints,
-        'timestamp': FieldValue.serverTimestamp(),
-      };
-
-      await firestore.collection('runs').add(runData);
-      print('✅ Uploaded run for day -$daysAgo');
-    }
-
-    print('🚀 All 14 sample runs uploaded!');
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    _logoutBloc.close();
+    super.dispose();
   }
 
-  void _loadUserName() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      setState(() {
-        userName = user.displayName ?? "Runner";
-      });
-    } else {
-      // Use GoRouter instead of Navigator.pushReplacement
+  void _setupAuthListener() {
+    // Listen to authentication state changes
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((
+      User? user,
+    ) {
       if (mounted) {
-        context.go('/login');
+        if (user != null) {
+          setState(() {
+            userName = user.displayName ?? user.email ?? "Runner";
+          });
+        } else {
+          // User is logged out, navigate to login after current build
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              context.go('/login');
+            }
+          });
+        }
       }
-    }
+    });
   }
 
   void _onMenuItemTapped(String item) {
-    // Close the drawer first
-    Navigator.of(context).pop();
-
-    // Handle menu item tap
-    print("Tapped on $item");
-    switch (item) {
-      case 'Home':
-        // Navigate to Home - Use GoRouter
-        AnalyticsService.setCurrentScreen('HomePage');
-        context.go('/'); // This will navigate to home
-        break;
-      case 'Profile':
-        // Navigate to Profile - Use GoRouter
-        context.go('/profile');
-        break;
-      case 'My Runs':
-        // Navigate to My Runs
-        context.go('/my-runs');
-        break;
-      case 'Settings':
-        // Navigate to Settings - Use GoRouter
-        context.go('/settings');
-        break;
-      case 'About':
-        // Navigate to About
-        context.go('/about');
-        break;
-      case 'Logout':
-        // Handle logout properly
-        _handleLogout();
-        break;
-      default:
-        print("Unknown menu item: $item");
+    if (item == 'Logout') {
+      // Don't close drawer here - handle it in logout process
+      _handleLogout();
+    } else {
+      MenuNavigationHandler.handleMenuItemTap(context, item);
     }
   }
 
-  // Add this method to handle logout properly
   Future<void> _handleLogout() async {
-    // Show confirmation dialog
-    final bool? shouldLogout = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirm Logout'),
-          content: const Text('Are you sure you want to logout?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Logout'),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-            ),
-          ],
-        );
-      },
+    if (!mounted) return;
+
+    // Show confirmation dialog (drawer remains open)
+    final bool? shouldLogout = await LogoutConfirmationDialog.show(context);
+
+    if (shouldLogout != true || !mounted) return;
+
+    // Start logout process (drawer will be closed by BlocListener)
+    _logoutBloc.add(LogoutRequested());
+  }
+
+  void _showLogoutError(String error) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Logout failed: $error'),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+        action: SnackBarAction(
+          label: 'Retry',
+          textColor: Colors.white,
+          onPressed: () {
+            if (mounted) {
+              _logoutBloc.add(LogoutRequested());
+            }
+          },
+        ),
+      ),
     );
-
-    if (shouldLogout == true) {
-      try {
-        // Show loading
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder:
-              (context) => const Center(child: CircularProgressIndicator()),
-        );
-
-        // Log analytics
-        AnalyticsService.logEvent('logout', {'method': 'menu_drawer'});
-
-        // Sign out
-        await FirebaseAuth.instance.signOut();
-
-        // Close loading dialog
-        if (mounted) Navigator.of(context).pop();
-
-        // Navigate to login
-        if (mounted) {
-          AnalyticsService.setCurrentScreen('LoginPage');
-          context.go('/login');
-        }
-      } catch (e) {
-        print('Logout error: $e');
-
-        // Close loading dialog
-        if (mounted) Navigator.of(context).pop();
-
-        // Show error
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Logout failed: ${e.toString()}'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Drawer(
-      backgroundColor: AppColors.cardBg,
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(color: AppColors.primary),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Marathon Trainer',
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 40,
-                        backgroundImage: AssetImage(
-                          'lib/assets/images/avatar.png',
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Welcome,',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
-                            ),
-                            Text(
-                              userName,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              overflow:
-                                  TextOverflow
-                                      .ellipsis, // Handle long names gracefully
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+    return BlocListener<LogoutBloc, LogoutState>(
+      bloc: _logoutBloc,
+      listener: (context, state) {
+        if (state is LogoutLoading) {
+          // Close drawer when logout starts
+          if (mounted && Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
+        } else if (state is LogoutSuccess) {
+          // Use addPostFrameCallback for navigation after logout
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              AnalyticsService.setCurrentScreen('LoginPage');
+              context.go('/login');
+            }
+          });
+        } else if (state is LogoutFailure) {
+          if (mounted) {
+            _showLogoutError(state.error);
+          }
+        }
+      },
+      child: BlocBuilder<LogoutBloc, LogoutState>(
+        bloc: _logoutBloc,
+        builder: (context, state) {
+          return Stack(
+            children: [
+              DrawerContent(
+                userName: userName,
+                state: state,
+                onMenuItemTapped: _onMenuItemTapped,
               ),
-            ),
-          ),
-          ...menuItems.map((item) {
-            return ListTile(
-              leading: Icon(item['icon'], color: AppColors.secondary),
-              title: Text(
-                item['title'],
-                style: TextStyle(color: AppColors.textPrimary),
-              ),
-              onTap: () => _onMenuItemTapped(item['title']),
-            );
-          }),
-        ],
+              // Show loading overlay during logout
+              if (state is LogoutLoading) const LogoutLoadingOverlay(),
+            ],
+          );
+        },
       ),
     );
   }

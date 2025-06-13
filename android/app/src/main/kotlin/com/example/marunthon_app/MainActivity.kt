@@ -1,4 +1,4 @@
-package com.example.marunthon_app
+package com.shivanandpatil.marathonrun
 
 import io.flutter.embedding.android.FlutterActivity
 
