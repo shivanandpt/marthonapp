@@ -9,6 +9,7 @@ import 'package:marunthon_app/features/user/user_profile/presentation/user_profi
 import 'package:marunthon_app/features/runs/models/run_model.dart';
 import 'package:marunthon_app/features/settings/screens/settings_screen.dart';
 import 'package:marunthon_app/features/home/presentation/screens/plan_creation_screen.dart';
+import 'package:marunthon_app/features/about/screens/about_us_screen.dart';
 
 class AppRoutes {
   final GoRouter router = GoRouter(
@@ -32,6 +33,10 @@ class AppRoutes {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/about',
+        builder: (context, state) => const AboutUsScreen(),
       ),
       GoRoute(
         path: '/setup-complete',
