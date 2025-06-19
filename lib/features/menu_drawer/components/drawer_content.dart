@@ -6,12 +6,14 @@ import 'menu_items_list.dart';
 
 class DrawerContent extends StatelessWidget {
   final String userName;
+  final String? userProfilePic;
   final LogoutState state;
   final Function(String) onMenuItemTapped;
 
   const DrawerContent({
     super.key,
     required this.userName,
+    this.userProfilePic,
     required this.state,
     required this.onMenuItemTapped,
   });
@@ -23,7 +25,10 @@ class DrawerContent extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          DrawerHeaderSection(userName: userName),
+          DrawerHeaderSection(
+            userName: userName,
+            userProfilePic: userProfilePic,
+          ),
           MenuItemsList(state: state, onMenuItemTapped: onMenuItemTapped),
         ],
       ),

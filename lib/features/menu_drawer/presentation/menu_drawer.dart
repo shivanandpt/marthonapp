@@ -19,6 +19,7 @@ class MenuDrawer extends StatefulWidget {
 
 class _MenuDrawerState extends State<MenuDrawer> {
   String userName = "Runner";
+  String? userProfilePic;
   late LogoutBloc _logoutBloc;
   StreamSubscription<User?>? _authSubscription;
 
@@ -45,6 +46,7 @@ class _MenuDrawerState extends State<MenuDrawer> {
         if (user != null) {
           setState(() {
             userName = user.displayName ?? user.email ?? "Runner";
+            userProfilePic = user.photoURL;
           });
         } else {
           // User is logged out, navigate to login after current build
@@ -131,6 +133,7 @@ class _MenuDrawerState extends State<MenuDrawer> {
             children: [
               DrawerContent(
                 userName: userName,
+                userProfilePic: userProfilePic,
                 state: state,
                 onMenuItemTapped: _onMenuItemTapped,
               ),
