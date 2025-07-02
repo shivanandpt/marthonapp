@@ -11,10 +11,11 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    runApp(MyApp());
+    
   } catch (e) {
     debugPrint("Firebase initialization error: $e");
   }
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {

@@ -99,7 +99,6 @@ flutter:
   assets:
     - lib/assets/images/
     - assets/app_icon/
-    - assets/icons/
 
   
 

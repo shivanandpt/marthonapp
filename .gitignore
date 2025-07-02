@@ -49,6 +49,7 @@ linux/
 macos/
 windows/
 firebase_options.json
+lib/firebase_options.dart
 # Xcode related
 ios/Flutter/Flutter.framework
 ios/Flutter/Flutter.podspec
