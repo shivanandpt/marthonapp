@@ -9,6 +9,7 @@ class RunPhaseModel {
   final String? targetPace;
   final String description;
   final String instructions;
+  final String? voicePrompt;
 
   const RunPhaseModel({
     required this.id,
@@ -19,6 +20,7 @@ class RunPhaseModel {
     this.targetPace,
     required this.description,
     required this.instructions,
+    this.voicePrompt,
   });
 
   factory RunPhaseModel.fromMap(Map<String, dynamic> map) {
@@ -34,6 +36,7 @@ class RunPhaseModel {
       targetPace: map['targetPace'],
       description: map['description'] ?? '',
       instructions: map['instructions'] ?? '',
+      voicePrompt: map['voicePrompt'] ?? '',
     );
   }
 
@@ -47,6 +50,7 @@ class RunPhaseModel {
       'targetPace': targetPace,
       'description': description,
       'instructions': instructions,
+      'voicePrompt': voicePrompt,
     };
   }
 }

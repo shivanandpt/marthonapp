@@ -115,11 +115,13 @@ class _TrainingPlanCardState extends State<TrainingPlanCard> {
                 ? trainingPhase.instruction
                 : 'Complete this ${trainingPhase.phase} phase',
         instructions:
-            trainingPhase.voicePrompt.isNotEmpty
-                ? trainingPhase.voicePrompt
-                : trainingPhase.instruction.isNotEmpty
+            trainingPhase.instruction.isNotEmpty
                 ? trainingPhase.instruction
                 : 'Maintain your ${trainingPhase.targetPace} pace',
+        voicePrompt:
+            trainingPhase.voicePrompt.isNotEmpty
+                ? trainingPhase.voicePrompt
+                : null,
       );
     }).toList();
   }

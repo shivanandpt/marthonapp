@@ -9,11 +9,13 @@ import 'package:marunthon_app/features/runs/run_tracking/bloc/run_tracking_state
 import 'package:marunthon_app/features/runs/models/run_phase_model.dart';
 import 'package:marunthon_app/features/runs/services/local_run_storage.dart';
 import 'package:marunthon_app/features/runs/services/run_service.dart';
+import 'package:marunthon_app/core/services/tts_service.dart';
 
 class RunTrackingBloc extends Bloc<RunTrackingEvent, RunTrackingState> {
   Timer? _timer;
   StreamSubscription<Position>? _positionSubscription;
   final RunService _runService = RunService();
+  final TTSService _ttsService = TTSService();
 
   RunTrackingBloc() : super(RunTrackingInitial()) {
     on<StartRun>(_onStartRun);
@@ -32,6 +34,7 @@ class RunTrackingBloc extends Bloc<RunTrackingEvent, RunTrackingState> {
   Future<void> close() {
     _timer?.cancel();
     _positionSubscription?.cancel();
+    _ttsService.dispose();
     return super.close();
   }
 
@@ -47,17 +50,22 @@ class RunTrackingBloc extends Bloc<RunTrackingEvent, RunTrackingState> {
         return;
       }
 
+      // Initialize TTS service
+      await _ttsService.initialize();
+
       // Create default phases if none provided
-      final phases = event.phases ?? [
-        RunPhaseModel(
-          id: 'freerun',
-          type: RunPhaseType.freeRun,
-          name: 'Free Run',
-          targetDuration: Duration(minutes: 30),
-          description: 'Run at your own pace',
-          instructions: 'Maintain a comfortable pace throughout',
-        ),
-      ];
+      final phases =
+          event.phases ??
+          [
+            RunPhaseModel(
+              id: 'freerun',
+              type: RunPhaseType.freeRun,
+              name: 'Free Run',
+              targetDuration: Duration(minutes: 30),
+              description: 'Run at your own pace',
+              instructions: 'Maintain a comfortable pace throughout',
+            ),
+          ];
 
       final now = DateTime.now();
 
@@ -76,6 +84,11 @@ class RunTrackingBloc extends Bloc<RunTrackingEvent, RunTrackingState> {
           totalPausedDuration: Duration.zero,
         ),
       );
+
+      // Announce the first phase
+      if (phases.isNotEmpty) {
+        await _announcePhase(phases[0]);
+      }
 
       // Start location tracking
       _startLocationTracking();
@@ -103,6 +116,9 @@ class RunTrackingBloc extends Bloc<RunTrackingEvent, RunTrackingState> {
           lastPauseTime: DateTime.now(),
         ),
       );
+
+      // Announce pause
+      await _ttsService.speak('Run paused');
 
       // Save progress locally immediately when paused
       await _saveRunProgress(currentState);
@@ -133,6 +149,9 @@ class RunTrackingBloc extends Bloc<RunTrackingEvent, RunTrackingState> {
         ),
       );
 
+      // Announce resume
+      await _ttsService.speak('Run resumed');
+
       // Restart tracking
       _startLocationTracking();
       _startTimer();
@@ -145,6 +164,13 @@ class RunTrackingBloc extends Bloc<RunTrackingEvent, RunTrackingState> {
 
       _timer?.cancel();
       _positionSubscription?.cancel();
+
+      // Announce completion with summary
+      final minutes = currentState.elapsedTime.inMinutes;
+      final distanceKm = (currentState.totalDistance / 1000).toStringAsFixed(1);
+      await _ttsService.speak(
+        'Run completed! Total time: $minutes minutes. Distance: $distanceKm kilometers. Great job!',
+      );
 
       // Save completed run
       await _saveCompletedRun(currentState);
@@ -171,12 +197,19 @@ class RunTrackingBloc extends Bloc<RunTrackingEvent, RunTrackingState> {
       final currentState = state as RunTrackingActive;
 
       if (currentState.hasNextPhase) {
+        final nextPhaseIndex = currentState.currentPhaseIndex + 1;
+
         emit(
           currentState.copyWith(
-            currentPhaseIndex: currentState.currentPhaseIndex + 1,
+            currentPhaseIndex: nextPhaseIndex,
             phaseElapsedTime: Duration.zero,
           ),
         );
+
+        // Announce the new phase
+        if (nextPhaseIndex < currentState.phases.length) {
+          await _announcePhase(currentState.phases[nextPhaseIndex]);
+        }
       }
     }
   }
@@ -189,12 +222,19 @@ class RunTrackingBloc extends Bloc<RunTrackingEvent, RunTrackingState> {
       final currentState = state as RunTrackingActive;
 
       if (currentState.hasPreviousPhase) {
+        final previousPhaseIndex = currentState.currentPhaseIndex - 1;
+
         emit(
           currentState.copyWith(
-            currentPhaseIndex: currentState.currentPhaseIndex - 1,
+            currentPhaseIndex: previousPhaseIndex,
             phaseElapsedTime: Duration.zero,
           ),
         );
+
+        // Announce the new phase
+        if (previousPhaseIndex >= 0) {
+          await _announcePhase(currentState.phases[previousPhaseIndex]);
+        }
       }
     }
   }
@@ -253,16 +293,50 @@ class RunTrackingBloc extends Bloc<RunTrackingEvent, RunTrackingState> {
         final newPhaseElapsedTime =
             currentState.phaseElapsedTime + Duration(seconds: 1);
 
-        final updatedState = currentState.copyWith(
-          elapsedTime: newElapsedTime,
-          phaseElapsedTime: newPhaseElapsedTime,
-        );
+        // Check if current phase is completed and auto-advance
+        bool shouldAdvancePhase = false;
+        final currentPhase = currentState.currentPhase;
+
+        if (currentPhase.targetDuration.inSeconds > 0 &&
+            newPhaseElapsedTime.inSeconds >=
+                currentPhase.targetDuration.inSeconds &&
+            currentState.hasNextPhase) {
+          shouldAdvancePhase = true;
+        }
+
+        RunTrackingActive updatedState;
+
+        if (shouldAdvancePhase) {
+          // Auto-advance to next phase
+          final nextPhaseIndex = currentState.currentPhaseIndex + 1;
+          updatedState = currentState.copyWith(
+            elapsedTime: newElapsedTime,
+            currentPhaseIndex: nextPhaseIndex,
+            phaseElapsedTime: Duration.zero, // Reset phase timer
+          );
+
+          // Announce the new phase
+          if (nextPhaseIndex < currentState.phases.length) {
+            await _announcePhase(currentState.phases[nextPhaseIndex]);
+          }
+        } else {
+          // Normal timer update
+          updatedState = currentState.copyWith(
+            elapsedTime: newElapsedTime,
+            phaseElapsedTime: newPhaseElapsedTime,
+          );
+        }
 
         emit(updatedState);
 
         // Auto-save progress every 30 seconds
         if (newElapsedTime.inSeconds % 30 == 0) {
           await _saveRunProgress(updatedState);
+        }
+
+        // Provide periodic voice guidance
+        if (!shouldAdvancePhase) {
+          await _providePeriodicGuidance(updatedState);
         }
       }
     }
@@ -286,9 +360,10 @@ class RunTrackingBloc extends Bloc<RunTrackingEvent, RunTrackingState> {
       final savedData = await LocalRunStorage.loadActiveRun();
       if (savedData != null) {
         // Restore saved run state
-        final phases = (savedData['phases'] as List)
-            .map((p) => RunPhaseModel.fromMap(p))
-            .toList();
+        final phases =
+            (savedData['phases'] as List)
+                .map((p) => RunPhaseModel.fromMap(p))
+                .toList();
 
         emit(
           RunTrackingActive(
@@ -308,9 +383,10 @@ class RunTrackingBloc extends Bloc<RunTrackingEvent, RunTrackingState> {
             routePoints: List<Map<String, dynamic>>.from(
               savedData['routePoints'] ?? [],
             ),
-            startTime: savedData['startTime'] != null
-                ? DateTime.parse(savedData['startTime'])
-                : null,
+            startTime:
+                savedData['startTime'] != null
+                    ? DateTime.parse(savedData['startTime'])
+                    : null,
             totalPausedDuration: Duration(
               seconds: savedData['totalPausedSeconds'] ?? 0,
             ),
@@ -360,7 +436,8 @@ class RunTrackingBloc extends Bloc<RunTrackingEvent, RunTrackingState> {
     final double dLat = _toRadians(lat2 - lat1);
     final double dLon = _toRadians(lon2 - lon1);
 
-    final double a = sin(dLat / 2) * sin(dLat / 2) +
+    final double a =
+        sin(dLat / 2) * sin(dLat / 2) +
         cos(_toRadians(lat1)) *
             cos(_toRadians(lat2)) *
             sin(dLon / 2) *
@@ -447,6 +524,140 @@ class RunTrackingBloc extends Bloc<RunTrackingEvent, RunTrackingState> {
       }
     } catch (e) {
       print('Error uploading pending runs: $e');
+    }
+  }
+
+  /// Announces a training phase using text-to-speech
+  Future<void> _announcePhase(RunPhaseModel phase) async {
+    try {
+      if (!_ttsService.isInitialized) {
+        await _ttsService.initialize();
+      }
+
+      // Determine the text to announce - prioritize voicePrompt over instructions
+      String phaseText = '';
+      if (phase.voicePrompt != null && phase.voicePrompt!.isNotEmpty) {
+        phaseText = phase.voicePrompt!;
+      } else if (phase.instructions.isNotEmpty) {
+        phaseText = phase.instructions;
+      } else {
+        // Fallback to a generic message
+        phaseText = 'Continue with your ${phase.name.toLowerCase()}';
+      }
+
+      // Create the announcement text based on phase type
+      String announcement = '';
+      switch (phase.type) {
+        case RunPhaseType.warmup:
+          announcement = 'Starting warm up phase. $phaseText';
+          break;
+        case RunPhaseType.easyRun:
+          announcement = 'Starting easy run phase. $phaseText';
+          break;
+        case RunPhaseType.intervals:
+          announcement = 'Starting intervals phase. $phaseText';
+          break;
+        case RunPhaseType.recovery:
+          announcement = 'Starting recovery phase. $phaseText';
+          break;
+        case RunPhaseType.cooldown:
+          announcement = 'Starting cool down phase. $phaseText';
+          break;
+        case RunPhaseType.freeRun:
+          announcement = 'Starting free run. $phaseText';
+          break;
+      }
+
+      // Add duration information if available
+      if (phase.targetDuration.inMinutes > 0) {
+        final minutes = phase.targetDuration.inMinutes;
+        announcement += ' Target duration: $minutes minutes.';
+      }
+
+      // Debug logging
+      print('TTS Debug - Phase: ${phase.name}');
+      print('TTS Debug - VoicePrompt: "${phase.voicePrompt}"');
+      print('TTS Debug - Instructions: "${phase.instructions}"');
+      print('TTS Debug - Final announcement: "$announcement"');
+
+      // Speak the announcement
+      await _ttsService.speak(announcement);
+    } catch (e) {
+      print('Error announcing phase: $e');
+    }
+  }
+
+  /// Provides periodic voice guidance during training phases
+  Future<void> _providePeriodicGuidance(RunTrackingActive state) async {
+    try {
+      if (!_ttsService.isInitialized) return;
+
+      final currentPhase = state.currentPhase;
+      final phaseElapsed = state.phaseElapsedTime;
+      final totalElapsed = state.elapsedTime;
+
+      // Provide guidance at specific intervals
+      final elapsedSeconds = phaseElapsed.inSeconds;
+      final totalSeconds = totalElapsed.inSeconds;
+
+      // Phase-specific guidance intervals
+      if (currentPhase.targetDuration.inSeconds > 0) {
+        final targetSeconds = currentPhase.targetDuration.inSeconds;
+        final remainingSeconds = targetSeconds - elapsedSeconds;
+
+        // Warn when 30 seconds remaining (for phases longer than 1 minute)
+        if (remainingSeconds == 30 && targetSeconds > 60) {
+          await _ttsService.speak('30 seconds remaining in this phase');
+          return;
+        }
+
+        // Warn when 10 seconds remaining (for all phases)
+        if (remainingSeconds == 10) {
+          await _ttsService.speak('10 seconds left');
+          return;
+        }
+
+        // Halfway point announcement (for phases longer than 2 minutes)
+        if (targetSeconds > 120 && elapsedSeconds == targetSeconds ~/ 2) {
+          await _ttsService.speak('Halfway through this phase. Keep going!');
+          return;
+        }
+      }
+
+      // General motivational updates every 5 minutes
+      if (totalSeconds > 0 && totalSeconds % 300 == 0) {
+        final minutes = totalSeconds ~/ 60;
+        final distanceKm = (state.totalDistance / 1000).toStringAsFixed(1);
+        await _ttsService.speak(
+          '$minutes minutes completed. Distance: $distanceKm kilometers. Great job!',
+        );
+        return;
+      }
+
+      // Speed guidance for intervals (every minute during high-intensity phases)
+      if (currentPhase.type == RunPhaseType.intervals &&
+          elapsedSeconds % 60 == 0 &&
+          elapsedSeconds > 0) {
+        final currentSpeedKmh = (state.currentSpeed * 3.6).toStringAsFixed(1);
+        if (state.currentSpeed > 0) {
+          await _ttsService.speak(
+            'Current speed: $currentSpeedKmh kilometers per hour. Keep pushing!',
+          );
+        } else {
+          await _ttsService.speak('Maintain your interval pace!');
+        }
+        return;
+      }
+
+      // Recovery phase guidance (every 30 seconds)
+      if (currentPhase.type == RunPhaseType.recovery &&
+          elapsedSeconds % 30 == 0 &&
+          elapsedSeconds > 0) {
+        await _ttsService.speak('Take your time to recover. Easy pace.');
+        return;
+      }
+    } catch (e) {
+      print('Error providing periodic guidance: $e');
     }
   }
 }

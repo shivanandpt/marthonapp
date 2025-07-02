@@ -187,30 +187,30 @@ class RunPhaseHeader extends StatelessWidget {
 
           SizedBox(height: 12),
 
-          // Instructions
-          if (currentPhase.instructions.isNotEmpty)
-            Container(
-              padding: EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(LucideIcons.info, color: AppColors.info, size: 16),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      currentPhase.instructions,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          // // Instructions
+          // if (currentPhase.instructions.isNotEmpty)
+          //   Container(
+          //     padding: EdgeInsets.all(12),
+          //     decoration: BoxDecoration(
+          //       color: AppColors.background,
+          //       borderRadius: BorderRadius.circular(8),
+          //     ),
+          //     child: Row(
+          //       children: [
+          //         Icon(LucideIcons.info, color: AppColors.info, size: 16),
+          //         SizedBox(width: 8),
+          //         Expanded(
+          //           child: Text(
+          //             currentPhase.instructions,
+          //             style: TextStyle(
+          //               fontSize: 12,
+          //               color: AppColors.textSecondary,
+          //             ),
+          //           ),
+          //         ),
+          //       ],
+          //     ),
+          //   ),
         ],
       ),
     );

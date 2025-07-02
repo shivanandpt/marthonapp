@@ -60,8 +60,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         return;
       }
 
-      print('Loading data for user: ${user.uid}');
-
       // Load user model
       final userModel = await _userService.getUserProfile(user.uid);
       if (userModel == null) {
@@ -69,27 +67,15 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         return;
       }
 
-      print('User profile loaded: ${userModel.name}');
-
       // Load active training plan
       final activePlan = await _trainingPlanService.getActiveTrainingPlan(
         user.uid,
       );
-      print('Active plan loaded: ${activePlan?.goalType ?? 'No active plan'}');
 
       // Load ALL runs for calculation (not limited)
       List<RunModel> allRuns = [];
       try {
-        print('Fetching ALL runs for user: ${user.uid}');
         allRuns = await _runService.getUserRuns(user.uid);
-        print('Loaded ${allRuns.length} total runs for calculation');
-
-        // Debug: Print all runs with training day IDs
-        for (var run in allRuns) {
-          print(
-            'Run: ${run.id}, Date: ${run.timestamp}, TrainingDayId: ${run.trainingDayId}',
-          );
-        }
       } catch (e) {
         print('Failed to load runs: $e');
         allRuns = [];
@@ -105,9 +91,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       // Get only recent runs for display (separate from calculation)
       final recentRuns = allRuns.take(5).toList();
       recentRuns.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-
-      print('Displaying ${recentRuns.length} recent runs in UI');
-      print('Used ${allRuns.length} runs for progress calculation');
 
       emit(
         HomeLoaded(

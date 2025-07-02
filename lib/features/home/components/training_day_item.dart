@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:marunthon_app/core/theme/app_colors.dart';
 import 'package:marunthon_app/features/home/utils/date_utils.dart';
-import 'package:marunthon_app/features/runs/run_tracking_pag.dart';
+import 'package:marunthon_app/features/runs/run_tracking_page.dart';
 import 'package:marunthon_app/features/home/models/training_day_model.dart';
 import 'training_day_item/training_day_card.dart';
 import 'training_day_item/training_day_details_modal.dart';
