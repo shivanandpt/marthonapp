@@ -10,6 +10,7 @@ import '../upcoming_training_section.dart';
 import 'no_runs_card.dart';
 import 'quick_start_menu.dart';
 import 'start_run_fab.dart';
+import '../../../../core/utils/platform_utils.dart';
 
 class HomeContent extends StatelessWidget {
   final HomeLoaded state;
@@ -22,61 +23,67 @@ class HomeContent extends StatelessWidget {
       onRefresh: () async {
         context.read<HomeBloc>().add(const RefreshHomeData());
       },
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Training Plan Progress Card with integrated workout view
-              if (state.activePlan != null)
-                TrainingPlanCard(
-                  activePlan: state.activePlan!,
-                  allTrainingDays: state.allTrainingDays,
-                  daysCompleted: state.daysCompleted,
-                  totalDays: state.totalDays,
-                  currentWeek: state.currentWeek,
-                  totalWeeks: state.totalWeeks,
-                  todaysTraining: state.todaysTraining,
-                  upcomingDays: state.upcomingTrainingDays,
-                ),
+      // Platform-specific styling for pull-to-refresh
+      color: Theme.of(context).primaryColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      child: CustomScrollView(
+        // Use platform-specific scroll physics for better UX
+        physics: PlatformUtils.scrollPhysics,
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // Training Plan Progress Card with integrated workout view
+                if (state.activePlan != null)
+                  TrainingPlanCard(
+                    activePlan: state.activePlan!,
+                    allTrainingDays: state.allTrainingDays,
+                    daysCompleted: state.daysCompleted,
+                    totalDays: state.totalDays,
+                    currentWeek: state.currentWeek,
+                    totalWeeks: state.totalWeeks,
+                    todaysTraining: state.todaysTraining,
+                    upcomingDays: state.upcomingTrainingDays,
+                  ),
 
-              // Remove separate Today's Training Card since it's now integrated
+                // No Plan Card and Quick Start Menu - Only show when no active plan
+                if (state.activePlan == null) ...[
+                  const NoPlanCard(),
+                  const QuickStartMenu(),
+                ],
 
-              // No Plan Card and Quick Start Menu - Only show when no active plan
-              if (state.activePlan == null) ...[
-                const NoPlanCard(),
-                const QuickStartMenu(),
-              ],
+                const SizedBox(height: 24),
 
-              const SizedBox(height: 24),
+                // Recent Runs Section - Only show if we have runs
+                if (state.recentRuns.isNotEmpty)
+                  RecentRunsSection(
+                    recentRuns: state.recentRuns,
+                    allRuns: state.allRuns,
+                    onDelete: (String runId) {
+                      // Handle run deletion via bloc
+                      //context.read<HomeBloc>().add(DeleteRunEvent(runId));
+                    },
+                  )
+                else
+                  const NoRunsCard(),
 
-              // Recent Runs Section - Only show if we have runs
-              if (state.recentRuns.isNotEmpty)
-                RecentRunsSection(
-                  recentRuns: state.recentRuns,
-                  allRuns: state.allRuns,
-                  onDelete: (String runId) {
-                    // Handle run deletion via bloc
-                    //context.read<HomeBloc>().add(DeleteRunEvent(runId));
-                  },
-                )
-              else
-                const NoRunsCard(),
+                // Upcoming Training Days Section
+                if (state.upcomingTrainingDays.isNotEmpty)
+                  UpcomingTrainingSection(
+                    upcomingDays: state.upcomingTrainingDays,
+                    todaysTraining: state.todaysTraining,
+                  ),
 
-              // Upcoming Training Days Section
-              if (state.upcomingTrainingDays.isNotEmpty)
-                UpcomingTrainingSection(
-                  upcomingDays: state.upcomingTrainingDays,
-                  todaysTraining: state.todaysTraining,
-                ),
-
-              // Start Free Run Button - Only show when no active plan
-              if (state.activePlan == null) const StartRunFAB(),
-            ],
+                // Start Free Run Button - Only show when no active plan
+                if (state.activePlan == null) const StartRunFAB(),
+                
+                // Add bottom padding for better scrolling experience
+                const SizedBox(height: 80),
+              ]),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

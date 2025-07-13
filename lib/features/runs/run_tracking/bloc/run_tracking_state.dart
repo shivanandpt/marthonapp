@@ -12,6 +12,15 @@ abstract class RunTrackingState extends Equatable {
 
 class RunTrackingInitial extends RunTrackingState {}
 
+class RunTrackingError extends RunTrackingState {
+  final String message;
+
+  const RunTrackingError(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}
+
 class RunTrackingActive extends RunTrackingState {
   final List<RunPhaseModel> phases;
   final int currentPhaseIndex;

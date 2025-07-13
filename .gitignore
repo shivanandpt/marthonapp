@@ -50,6 +50,13 @@ macos/
 windows/
 firebase_options.json
 lib/firebase_options.dart
+
+# Firebase and iOS config files
+firebase.json
+ios/Flutter/Debug.xcconfig
+ios/Flutter/Release.xcconfig
+ios/Runner/GoogleService-Info.plist
+
 # Xcode related
 ios/Flutter/Flutter.framework
 ios/Flutter/Flutter.podspec

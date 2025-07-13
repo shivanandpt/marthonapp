@@ -55,6 +55,17 @@
 	<array>
 		<string>_dartobservatory._tcp</string>
 	</array>
+	<!-- Location permissions for run tracking -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs location access to track your running routes and provide accurate distance and pace measurements during workouts.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app needs location access to track your running routes and provide accurate distance and pace measurements during workouts.</string>
+	<!-- Background location for continuous tracking during runs -->
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app needs background location access to continue tracking your runs even when the app is in the background.</string>
+	<!-- Motion permissions for step counting and activity detection -->
+	<key>NSMotionUsageDescription</key>
+	<string>This app uses motion sensors to detect your running activity and provide more accurate fitness data.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
     	<dict>

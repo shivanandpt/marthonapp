@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:marunthon_app/features/runs/run_tracking/bloc/run_tracking_event.dart';
 import 'package:marunthon_app/features/runs/run_tracking/bloc/run_tracking_state.dart';
@@ -10,6 +9,7 @@ import 'package:marunthon_app/features/runs/models/run_phase_model.dart';
 import 'package:marunthon_app/features/runs/services/local_run_storage.dart';
 import 'package:marunthon_app/features/runs/services/run_service.dart';
 import 'package:marunthon_app/core/services/tts_service.dart';
+import 'package:marunthon_app/core/utils/location_permission_helper.dart';
 
 class RunTrackingBloc extends Bloc<RunTrackingEvent, RunTrackingState> {
   Timer? _timer;
@@ -43,15 +43,21 @@ class RunTrackingBloc extends Bloc<RunTrackingEvent, RunTrackingState> {
     Emitter<RunTrackingState> emit,
   ) async {
     try {
-      // Request location permission
-      final locationPermission = await Permission.location.request();
-      if (!locationPermission.isGranted) {
-        emit(RunTrackingInitial()); // Could add error state here
+      // Use the comprehensive permission helper
+      final permissionResult = await LocationPermissionHelper.checkAndRequestPermission();
+      
+      if (!permissionResult.isGranted) {
+        emit(RunTrackingError(permissionResult.message));
         return;
       }
 
       // Initialize TTS service
-      await _ttsService.initialize();
+      try {
+        await _ttsService.initialize();
+      } catch (e) {
+        print('TTS initialization failed: $e');
+        // Continue without TTS if it fails
+      }
 
       // Create default phases if none provided
       final phases =
@@ -87,7 +93,12 @@ class RunTrackingBloc extends Bloc<RunTrackingEvent, RunTrackingState> {
 
       // Announce the first phase
       if (phases.isNotEmpty) {
-        await _announcePhase(phases[0]);
+        try {
+          await _announcePhase(phases[0]);
+        } catch (e) {
+          print('TTS announcement failed: $e');
+          // Continue without announcement if TTS fails
+        }
       }
 
       // Start location tracking
@@ -96,7 +107,8 @@ class RunTrackingBloc extends Bloc<RunTrackingEvent, RunTrackingState> {
       // Start timer
       _startTimer();
     } catch (e) {
-      emit(RunTrackingInitial()); // Could add error state
+      print('Run start error: $e');
+      emit(RunTrackingError('Failed to start run: ${e.toString()}'));
     }
   }
 

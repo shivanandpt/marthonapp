@@ -8,6 +8,7 @@ import 'package:marunthon_app/features/runs/run_tracking/bloc/run_tracking_event
 import 'package:marunthon_app/features/runs/run_tracking/components/run_phase_header.dart';
 import 'package:marunthon_app/features/runs/run_tracking/components/run_controls.dart';
 import 'package:marunthon_app/features/runs/run_tracking/components/run_stats_display.dart';
+import 'package:marunthon_app/core/utils/location_permission_helper.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class RunTrackingScreen extends StatelessWidget {
@@ -19,13 +20,15 @@ class RunTrackingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => RunTrackingBloc()..add(StartRun(phases: phases)),
-      child: const _RunTrackingView(),
+      child: _RunTrackingView(phases: phases),
     );
   }
 }
 
 class _RunTrackingView extends StatelessWidget {
-  const _RunTrackingView();
+  final List<RunPhaseModel>? phases;
+  
+  const _RunTrackingView({this.phases});
 
   double _calculateAveragePace(double distanceKm, Duration time) {
     if (distanceKm == 0 || time.inSeconds == 0) return 0;
@@ -67,6 +70,119 @@ class _RunTrackingView extends StatelessWidget {
           if (state is RunTrackingInitial) {
             return Center(
               child: CircularProgressIndicator(color: AppColors.primary),
+            );
+          }
+
+          if (state is RunTrackingError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      LucideIcons.mapPin,
+                      size: 64,
+                      color: Colors.orange,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Location Access Required',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      state.message,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: AppColors.textSecondary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.cardBg.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'To track your runs, we need access to your location.',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Go to Settings > Privacy & Security > Location Services and enable location for this app.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary.withOpacity(0.8),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.cardBg,
+                              foregroundColor: AppColors.textPrimary,
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            ),
+                            child: const Text('Go Back'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              await LocationPermissionHelper.openAppSettings();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            ),
+                            child: const Text('Open Settings'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              context.read<RunTrackingBloc>().add(
+                                StartRun(phases: phases),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            ),
+                            child: const Text('Try Again'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             );
           }
 

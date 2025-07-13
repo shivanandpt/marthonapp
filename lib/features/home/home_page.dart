@@ -23,14 +23,13 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create:
-          (context) => HomeBloc(
-            auth: FirebaseAuth.instance,
-            userService: UserService(),
-            trainingPlanService: TrainingPlanService(),
-            trainingDayService: TrainingDayService(),
-            runService: RunService(),
-          )..add(const LoadHomeData()),
+      create: (context) => HomeBloc(
+        auth: FirebaseAuth.instance,
+        userService: UserService(),
+        trainingPlanService: TrainingPlanService(),
+        trainingDayService: TrainingDayService(),
+        runService: RunService(),
+      )..add(const LoadHomeData()),
       child: const HomeView(),
     );
   }
@@ -43,11 +42,45 @@ class HomeView extends StatefulWidget {
   State<HomeView> createState() => _HomeViewState();
 }
 
-class _HomeViewState extends State<HomeView> {
+class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     AnalyticsService.setCurrentScreen('HomePage');
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    // Handle app lifecycle changes for both iOS and Android
+    switch (state) {
+      case AppLifecycleState.resumed:
+        // App came to foreground - refresh data if needed
+        if (mounted) {
+          context.read<HomeBloc>().add(const RefreshHomeData());
+        }
+        break;
+      case AppLifecycleState.paused:
+        // App went to background - save any pending data
+        break;
+      case AppLifecycleState.detached:
+        // App is being terminated
+        break;
+      case AppLifecycleState.inactive:
+        // App is inactive (iOS specific)
+        break;
+      case AppLifecycleState.hidden:
+        // App is hidden (newer Flutter versions)
+        break;
+    }
   }
 
   @override
@@ -56,7 +89,13 @@ class _HomeViewState extends State<HomeView> {
       backgroundColor: AppColors.background,
       appBar: const HomeAppBar(),
       drawer: const MenuDrawer(),
-      body: const HomeBody(),
+      body: SafeArea(
+        // SafeArea ensures content doesn't overlap with system UI
+        child: const HomeBody(),
+      ),
+      // Add platform-specific behavior for the drawer
+      endDrawerEnableOpenDragGesture: true,
+      drawerEnableOpenDragGesture: true,
     );
   }
 }

@@ -16,13 +16,23 @@ class HomeBody extends StatelessWidget {
     return BlocConsumer<HomeBloc, HomeState>(
       listener: (context, state) {
         if (state is HomeProfileNotFound) {
-          context.go('/profile-setup');
+          // Use post frame callback for safe navigation
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              context.go('/profile-setup');
+            }
+          });
         } else if (state is HomeError &&
             state.message.contains('not authenticated')) {
-          context.go('/login');
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              context.go('/login');
+            }
+          });
         }
       },
       builder: (context, state) {
+        // Add platform-specific loading and error handling
         if (state is HomeLoading || state is HomeInitial) {
           return const LoadingView();
         }
@@ -39,7 +49,13 @@ class HomeBody extends StatelessWidget {
           return HomeContent(state: state);
         }
 
-        return const SizedBox.shrink();
+        // Fallback state
+        return const Center(
+          child: Text(
+            'Welcome to Marathon Training!',
+            style: TextStyle(fontSize: 16),
+          ),
+        );
       },
     );
   }
